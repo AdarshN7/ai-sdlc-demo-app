@@ -1,15 +1,16 @@
 # Invoice Approval Demo App
 forked by Adarsh Nishad
 
-A small invoice approval app used for live AI-in-SDLC demos. It is deliberately simple: a .NET 8 API, a plain web UI, and an in-memory store, so it runs with one command and no database.
+A small invoice approval app used for live AI-in-SDLC demos. Migrated from .NET 8 to a full-stack Next.js App Router application in TypeScript. It is deliberately simple: Next.js Route Handlers, React client components, and an in-memory store, so it runs with one command and no external database.
 
 ## Run it
 
-```
-dotnet run --project backend/src/InvoiceApp.Api
+```bash
+npm install
+npm run dev
 ```
 
-Open http://localhost:5000 and sign in:
+Open http://localhost:3000 and sign in:
 
 | User | Password | Role |
 | --- | --- | --- |
@@ -28,19 +29,30 @@ Invoices move through Draft, Pending Approval, then Approved or Rejected.
 
 ## Tests
 
+Run unit and integration tests (Vitest):
+```bash
+npm test
 ```
-dotnet test backend/InvoiceApp.sln
+
+Run end-to-end tests (Playwright):
+```bash
+npm run test:e2e
 ```
 
 ## Project layout
 
 ```
-backend/
-  src/InvoiceApp.Domain   business rules
-  src/InvoiceApp.Api      controllers, sign-in, web UI (wwwroot)
-  tests/InvoiceApp.Tests  xUnit tests
-docs/use-cases            short feature briefs
-AGENTS.md                 conventions for AI coding agents
+src/
+  app/                    Next.js App Router (page, layout, API route handlers)
+  components/             React UI components
+  domain/                 Pure business rules, models, and interfaces
+  infrastructure/         In-memory persistence, authentication, and HTTP error handling
+tests/
+  unit/                   Vitest unit tests (ApprovalService, DiscountCalculator)
+  integration/            Vitest API route contract tests
+e2e/                      Playwright end-to-end tests and page objects
+docs/use-cases            Short feature briefs
+AGENTS.md                 Conventions for AI coding agents
 ```
 
 ## Use cases

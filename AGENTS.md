@@ -1,31 +1,35 @@
 # Project conventions for AI agents
 
-Invoice approval demo app: ASP.NET Core 8 Web API with a small static web UI.
+Invoice approval demo app: Full-stack Next.js App Router application in TypeScript.
 
 ## Layout
 
-- `backend/src/InvoiceApp.Domain`: business rules, no web or storage code. `ApprovalService` owns the invoice lifecycle (Draft, PendingApproval, Approved, Rejected).
-- `backend/src/InvoiceApp.Api`: controllers, sign-in (`Auth/`), in-memory repository, and the web UI under `wwwroot/`.
-- `backend/tests/InvoiceApp.Tests`: xUnit tests, one test class per class under test, named `<ClassUnderTest>Tests`.
+- `src/domain`: business rules, models, and repository interfaces. No web or Next.js code. `ApprovalService` owns the invoice lifecycle (Draft, PendingApproval, Approved, Rejected).
+- `src/infrastructure`: in-memory repository, sign-in/session store (`auth/`), and HTTP error handling.
+- `src/app/api`: Route Handlers, one per resource/action.
+- `src/app`: App Router pages, layout, and global styling.
+- `src/components`: React client components.
+- `tests/unit`: Vitest unit tests, one test suite per domain class under test.
+- `tests/integration`: Vitest integration tests covering API endpoints and contracts.
 - `e2e`: Playwright end-to-end tests (`tests/`) and page objects (`pages/`).
 - `docs/use-cases`: short briefs for features we may build.
 
 ## Conventions
 
-- Controllers live in `Controllers/`, one per resource, route `api/[controller]`. Request bodies are `record` types declared inside the controller.
-- Controllers inherit `ApiControllerBase` and use `Handle(...)` so service errors map to 404, 409 and 400.
-- Every endpoint is behind sign-in. Restrict actions with `[RequireRole("...")]`: destructive actions are Admin only, approvals are Approver or Admin.
-- Business rules go in the Domain project, never in controllers.
-- Register services in `Program.cs`. Repositories are interfaces in Domain with an in-memory implementation in Api.
+- Route handlers live in `src/app/api/`. Request bodies are typed interfaces.
+- Route handlers use `handleApiError(...)` so domain errors map to 404, 409, 400, 401, and 403.
+- Every endpoint is behind sign-in (except login). Restrict actions with `requireAuth(request, ['Role'])`: destructive actions are Admin only, approvals are Approver or Admin.
+- Business rules go in `src/domain`, never in route handlers or client components.
+- Repositories are interfaces in `domain/` with an in-memory implementation in `infrastructure/`.
 - Every new rule or endpoint needs tests. Use `FakeInvoiceRepository` in tests.
 - Use clear names; no one-letter variables or `flag` parameters.
 - End-to-end tests use page objects and role-based locators (`getByRole`, `getByLabel`), never CSS or XPath selectors.
 
 ## Commands
 
-- Run the app: `dotnet run --project backend/src/InvoiceApp.Api` then open http://localhost:5000
-- Run the tests: `dotnet test backend/InvoiceApp.sln`
-- Run end-to-end tests: `cd e2e && npm install && npx playwright install chromium && npm test`
+- Run the app: `npm run dev` then open http://localhost:3000
+- Run unit & integration tests: `npm test`
+- Run end-to-end tests: `npm run test:e2e`
 
 ## Demo accounts (not real credentials)
 
@@ -35,4 +39,4 @@ Invoice approval demo app: ASP.NET Core 8 Web API with a small static web UI.
 ## Never
 
 - Commit real credentials, tokens or customer data.
-- Add business logic to `Program.cs` or controllers.
+- Add business logic to route handlers or React components.

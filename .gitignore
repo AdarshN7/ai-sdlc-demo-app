@@ -5,6 +5,7 @@ obj/
 .vs/
 .idea/
 node_modules/
+.next/
 .env
 test-results/
 playwright-report/
