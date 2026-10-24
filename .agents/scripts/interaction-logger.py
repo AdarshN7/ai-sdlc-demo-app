@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 """
-interaction-logger.py — Robust JSONL interaction logger for Antigravity IDE lifecycle hooks.
+interaction-logger.py — High-signal JSONL interaction logger for Antigravity IDE lifecycle hooks.
 
-Parses incoming hook JSON from stdin, extracts tool parameters, summaries,
-content, user prompts (from transcript when available), redacts secrets,
-and appends a JSONL entry to .ai-sdlc/interaction-log.jsonl.
+Records ONLY major events to keep .ai-sdlc/interaction-log.jsonl clean and readable:
+- User requests (logged once per prompt submission)
+- Significant tool executions (code changes, commands, subagents, etc.)
+- Tool errors/failures
+- Task termination/completion
+- Explicit manual entries (human decisions, prompt/response/task summaries)
+
+Filters out:
+- Passive inspection tools (view_file, list_dir, grep_search, etc.)
+- Successful tool completion chatter (since execution was already recorded)
+- Internal model turn loops and invocation number spam
 """
 
 import os
@@ -12,6 +20,7 @@ import sys
 import json
 import time
 import re
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -25,6 +34,18 @@ LOCK_DIR = LOG_DIR / ".lock"
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 DEDUP_DIR.mkdir(parents=True, exist_ok=True)
+
+# Passive read-only tools that clutter the log during development
+MINOR_TOOLS = {
+    "view_file",
+    "list_dir",
+    "grep_search",
+    "read_resource",
+    "list_resources",
+    "read_url_content",
+    "schedule",
+    "manage_task",
+}
 
 # Sensitive patterns for redaction
 REDACTION_PATTERNS = [
@@ -129,12 +150,18 @@ def process_payload(raw_data: str, hook_arg: str = ""):
     content = payload.get("content", "")
     summary = payload.get("summary", "")
 
-    # Determine event type & actor
+    # -------------------------------------------------------------------------
+    # Filtering: Ignore minor/noisy events
+    # -------------------------------------------------------------------------
+
     if hook_type == "PreToolUse":
+        # Skip passive read-only tools
+        if tool_name in MINOR_TOOLS:
+            return
+
         event_type = "tool_execution_start"
         actor = "agent"
 
-        # Determine summary if not provided
         if not summary:
             summary = (
                 tool_args.get("toolSummary")
@@ -146,65 +173,64 @@ def process_payload(raw_data: str, hook_arg: str = ""):
             )
         if not summary:
             if command_line:
-                summary = f"Run: {command_line[:100]}"
+                summary = f"Run: {command_line[:120]}"
             elif target_file:
                 basename = Path(target_file).name
                 summary = f"{tool_name}: {basename}"
             else:
                 summary = f"Execute {tool_name}" if tool_name else "Tool execution"
 
-        # Determine content if not provided
         if not content:
             content = (
                 tool_args.get("Description")
                 or tool_args.get("Instruction")
                 or tool_args.get("Task")
                 or tool_args.get("Prompt")
-                or tool_args.get("Query")
                 or tool_args.get("CommandLine")
-                or (tool_args.get("toolAction") if tool_args.get("toolAction") != summary else "")
-                or (f"{tool_name} on {target_file}" if target_file else "")
+                or (f"{tool_name} {target_file}" if target_file else "")
                 or summary
             )
 
     elif hook_type == "PostToolUse":
-        event_type = "tool_execution_end"
+        # Only log tool completions if there was an ERROR
+        if not error_msg:
+            return
+
+        event_type = "tool_error"
         actor = "agent"
-        if error_msg:
-            summary = summary or f"{tool_name or 'Tool'} failed: {error_msg[:100]}"
-            content = content or error_msg
-        else:
-            summary = summary or f"{tool_name or 'Tool'} completed successfully"
-            content = content or "success"
+        summary = f"{tool_name or 'Tool'} failed: {error_msg[:120]}"
+        content = error_msg
 
     elif hook_type == "PreInvocation":
-        event_type = "model_invocation_start"
-        actor = "system"
+        # Only log when a NEW user prompt is received
         req_sum, req_cnt = extract_user_request_from_transcript(transcript_path)
-        if req_sum and not summary:
-            summary = req_sum
-        if req_cnt and not content:
-            content = req_cnt
-        if not summary:
-            summary = f"Model invocation #{invocation_num or 0} started"
-        if not content:
-            content = f"Invoking {model_name or 'model'}"
+        if not req_cnt:
+            return
+
+        # Deduplicate per user prompt
+        prompt_hash = hashlib.sha256(f"{conversation_id}:{req_cnt}".encode("utf-8")).hexdigest()[:16]
+        prompt_dedup_file = DEDUP_DIR / f"prompt-{prompt_hash}"
+        if prompt_dedup_file.exists():
+            return
+        try:
+            prompt_dedup_file.touch()
+        except Exception:
+            pass
+
+        event_type = "user_request"
+        actor = "human"
+        summary = req_sum
+        content = req_cnt
 
     elif hook_type == "PostInvocation":
-        event_type = "model_invocation_end"
-        actor = "system"
-        if not summary:
-            summary = f"Model invocation #{invocation_num or 0} completed"
-        if not content:
-            content = "Model response completed"
+        # Never log generic model response completion turns
+        return
 
     elif hook_type == "Stop":
         event_type = "task_termination"
         actor = "system"
-        if not summary:
-            summary = f"Task stopped: {termination_reason or 'finished'}"
-        if not content:
-            content = f"Termination reason: {termination_reason or 'none'}. Error: {error_msg or 'none'}"
+        summary = f"Task stopped: {termination_reason or 'finished'}"
+        content = f"Termination reason: {termination_reason or 'none'}. Error: {error_msg or 'none'}"
 
     elif hook_type == "ManualEntry":
         event_type = payload.get("eventType") or "manual_entry"
@@ -216,12 +242,8 @@ def process_payload(raw_data: str, hook_arg: str = ""):
             content = summary
 
     else:
-        event_type = payload.get("eventType") or "unknown"
-        actor = payload.get("actor") or "unknown"
-        if not summary and content:
-            summary = content.splitlines()[0][:120]
-        elif not content and summary:
-            content = summary
+        # Unknown hook type: ignore
+        return
 
     # Suffix & Event ID
     if step_idx is not None and str(step_idx) != "":

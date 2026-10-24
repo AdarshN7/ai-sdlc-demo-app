@@ -31,13 +31,6 @@
         "timeout": 5
       }
     ],
-    "PostInvocation": [
-      {
-        "type": "command",
-        "command": "sh ./scripts/hook-dispatch.sh PostInvocation",
-        "timeout": 5
-      }
-    ],
     "Stop": [
       {
         "type": "command",

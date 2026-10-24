@@ -75,6 +75,12 @@ CAPTURE_STATUS="$(extract_field captureStatus)"
 
 case "$HOOK_TYPE" in
   PreToolUse)
+    case "$TOOL_NAME" in
+      view_file|list_dir|grep_search|read_resource|list_resources|read_url_content|schedule|manage_task)
+        exit 0
+        ;;
+    esac
+
     EVENT_TYPE="tool_execution_start"
     ACTOR="agent"
     COMMAND_LINE="$(extract_field CommandLine)"
@@ -100,27 +106,22 @@ case "$HOOK_TYPE" in
     [ -z "$CONTENT" ] && CONTENT="$SUMMARY"
     ;;
   PostToolUse)
-    EVENT_TYPE="tool_execution_end"
+    # Only record if there was an error
+    [ -z "$ERROR_MSG" ] && exit 0
+    EVENT_TYPE="tool_error"
     ACTOR="agent"
-    if [ -n "$ERROR_MSG" ]; then
-      [ -z "$SUMMARY" ] && SUMMARY="${TOOL_NAME:-Tool} failed: $ERROR_MSG"
-      [ -z "$CONTENT" ] && CONTENT="$ERROR_MSG"
-    else
-      [ -z "$SUMMARY" ] && SUMMARY="${TOOL_NAME:-Tool} completed successfully"
-      [ -z "$CONTENT" ] && CONTENT="success"
-    fi
+    [ -z "$SUMMARY" ] && SUMMARY="${TOOL_NAME:-Tool} failed: $ERROR_MSG"
+    [ -z "$CONTENT" ] && CONTENT="$ERROR_MSG"
     ;;
   PreInvocation)
-    EVENT_TYPE="model_invocation_start"
-    ACTOR="system"
-    [ -z "$SUMMARY" ] && SUMMARY="Model invocation #${INVOCATION_NUM:-0} started"
-    [ -z "$CONTENT" ] && CONTENT="Invoking ${MODEL_NAME:-model}"
+    # Internal model invocations are noisy; only log when explicit user prompt content is present
+    [ -z "$CONTENT" ] && exit 0
+    EVENT_TYPE="user_request"
+    ACTOR="human"
+    [ -z "$SUMMARY" ] && SUMMARY="$CONTENT"
     ;;
   PostInvocation)
-    EVENT_TYPE="model_invocation_end"
-    ACTOR="system"
-    [ -z "$SUMMARY" ] && SUMMARY="Model invocation #${INVOCATION_NUM:-0} completed"
-    [ -z "$CONTENT" ] && CONTENT="Model turn completed"
+    exit 0
     ;;
   Stop)
     EVENT_TYPE="task_termination"
