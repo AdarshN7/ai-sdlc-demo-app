@@ -11,8 +11,8 @@
 #
 # This script creates a ManualEntry payload and pipes it to interaction-logger.sh.
 # Used by the interaction-audit skill for events that hooks cannot capture:
-#   - User prompts (summary only)
-#   - Assistant responses (summary only)
+#   - User prompts
+#   - Assistant responses
 #   - Human decisions (accept/reject/modify)
 #   - Sub-agent task summaries
 
@@ -59,30 +59,49 @@ if [ -z "$ACTOR" ]; then
   ACTOR="human"
 fi
 
-# Generate a unique step index for manual entries.
-# Include event type and nanosecond-precision timestamp to avoid collisions.
-MANUAL_STEP="m$(date +%s)-${EVENT_TYPE}-$$"
+# Ensure both summary and content are populated
+if [ -z "$SUMMARY" ] && [ -n "$CONTENT" ]; then
+  SUMMARY="$(printf '%s' "$CONTENT" | head -n 1 | cut -c 1-120)"
+fi
 
-# Use "manual" capture status to distinguish from auto-captured events
+if [ -z "$CONTENT" ] && [ -n "$SUMMARY" ]; then
+  CONTENT="$SUMMARY"
+fi
+
+# Generate a unique step index for manual entries
+MANUAL_STEP="m$(date +%s)-${EVENT_TYPE}-$$"
 CAPTURE_STATUS="manual"
 
 # ---------------------------------------------------------------------------
-# Build and send payload
+# Build and send payload safely
 # ---------------------------------------------------------------------------
 
-# Escape double quotes in content and summary for JSON safety
-escape_json_value() {
-  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+if command -v python3 >/dev/null 2>&1; then
+  python3 -c "
+import sys, json
+
+payload = {
+    'hookType': 'ManualEntry',
+    'eventType': sys.argv[1],
+    'actor': sys.argv[2],
+    'content': sys.argv[3],
+    'summary': sys.argv[4],
+    'conversationId': sys.argv[5],
+    'stepIdx': sys.argv[6],
+    'captureStatus': sys.argv[7]
 }
+sys.stdout.write(json.dumps(payload))
+" "$EVENT_TYPE" "$ACTOR" "$CONTENT" "$SUMMARY" "$SESSION_ID" "$MANUAL_STEP" "$CAPTURE_STATUS" | sh "$LOGGER"
+else
+  escape_json_value() {
+    printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | tr '\n' ' ' | tr '\t' ' '
+  }
 
-CONTENT_ESC="$(escape_json_value "$CONTENT")"
-SUMMARY_ESC="$(escape_json_value "$SUMMARY")"
+  CONTENT_ESC="$(escape_json_value "$CONTENT")"
+  SUMMARY_ESC="$(escape_json_value "$SUMMARY")"
 
-PAYLOAD=$(cat <<EOF
-{"hookType":"ManualEntry","eventType":"$EVENT_TYPE","actor":"$ACTOR","content":"$CONTENT_ESC","summary":"$SUMMARY_ESC","conversationId":"$SESSION_ID","stepIdx":"$MANUAL_STEP","captureStatus":"$CAPTURE_STATUS"}
-EOF
-)
-
-printf '%s' "$PAYLOAD" | sh "$LOGGER"
+  PAYLOAD="{\"hookType\":\"ManualEntry\",\"eventType\":\"$EVENT_TYPE\",\"actor\":\"$ACTOR\",\"content\":\"$CONTENT_ESC\",\"summary\":\"$SUMMARY_ESC\",\"conversationId\":\"$SESSION_ID\",\"stepIdx\":\"$MANUAL_STEP\",\"captureStatus\":\"$CAPTURE_STATUS\"}"
+  printf '%s' "$PAYLOAD" | sh "$LOGGER"
+fi
 
 echo "Logged: [$EVENT_TYPE] $SUMMARY"

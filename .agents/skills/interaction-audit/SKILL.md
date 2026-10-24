@@ -17,23 +17,22 @@ IDE lifecycle hooks **cannot** automatically capture.
 
 The hooks in [hooks.json](../hooks.json) automatically log:
 
-- **Tool executions** — tool name, arguments, step index, file paths, commands
-- **Tool completions** — success/failure, error messages
-- **Model invocations** — invocation number, start/end
+- **Tool executions** — tool name, arguments, step index, file paths, commands, with rich `summary` and `content` (from `toolSummary`, `toolAction`, `Description`, `Instruction`, `CommandLine`, etc.)
+- **Tool completions** — success/failure, error messages, and status
+- **Model invocations** — invocation number, user prompt request and summary (extracted from conversation transcript)
 - **Task termination** — reason, idle state
 
 These events are marked with `"captureStatus": "auto"` in the log.
 
 ## What Requires Manual Logging
 
-The hook payloads do **not** expose:
+For high-level project auditability, manual entries can record:
 
-1. **User prompts** — the text the human typed
-2. **Assistant final responses** — the model's reply text
-3. **Human decisions** — accept/reject/modify actions
-4. **Sub-agent task summaries** — what a spawned sub-agent accomplished
+1. **Human decisions** — explicit accept/reject/modify actions
+2. **Detailed response summaries** — high-level syntheses of work done by the agent
+3. **Sub-agent task summaries** — what a spawned sub-agent accomplished
 
-These must be recorded using the manual entry script below.
+Both `--summary` and `--content` are supported. If one is omitted, it will automatically be derived from the other so neither field is left empty.
 
 ---
 
@@ -55,7 +54,7 @@ sh .agents/scripts/log-manual-entry.sh \
 | `--event-type` | `--actor` | When to Use |
 |---|---|---|
 | `prompt_summary` | `human` | Summarize what the user asked |
-| `response_summary` | `agent` | Summarize the agent's response (since full text is not in hooks) |
+| `response_summary` | `agent` | Summarize the agent's response |
 | `human_decision` | `human` | Record an accept, reject, or modify decision |
 | `task_summary` | `agent` | Summarize a completed task or sub-agent work |
 
@@ -66,6 +65,7 @@ sh .agents/scripts/log-manual-entry.sh \
 sh .agents/scripts/log-manual-entry.sh \
   --event-type "prompt_summary" \
   --actor "human" \
+  --content "User asked to implement bulk approval endpoint with validation" \
   --summary "Asked agent to implement bulk approval endpoint"
 ```
 
@@ -83,6 +83,7 @@ sh .agents/scripts/log-manual-entry.sh \
 sh .agents/scripts/log-manual-entry.sh \
   --event-type "response_summary" \
   --actor "agent" \
+  --content "Created BulkApprovalController with POST endpoint, validated permissions, and added unit tests" \
   --summary "Created BulkApprovalController with POST endpoint and tests"
 ```
 
@@ -91,6 +92,7 @@ sh .agents/scripts/log-manual-entry.sh \
 sh .agents/scripts/log-manual-entry.sh \
   --event-type "task_summary" \
   --actor "agent" \
+  --content "Sub-agent configured Playwright, created LoginPage and InvoicesPage POMs, and ran tests cleanly" \
   --summary "Sub-agent completed Playwright E2E test for login flow"
 ```
 

@@ -29,7 +29,7 @@ fi
 ENRICHED=$(printf '{"hookType":"%s",%s' "$HOOK_TYPE" "$(echo "$PAYLOAD" | sed 's/^{//')")
 
 # Forward to the logger
-printf '%s' "$ENRICHED" | sh "$LOGGER"
+printf '%s' "$ENRICHED" | sh "$LOGGER" "$HOOK_TYPE"
 
 # Return the expected output for each hook type
 case "$HOOK_TYPE" in
