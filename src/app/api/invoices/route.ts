@@ -4,7 +4,13 @@ import { requireAuth } from '@/infrastructure/auth/auth-guard';
 import { handleApiError } from '@/infrastructure/http/api-handler';
 import { InvoiceStatus } from '@/domain/invoice';
 
-const VALID_STATUSES: InvoiceStatus[] = ['Draft', 'PendingApproval', 'Approved', 'Rejected'];
+const VALID_STATUSES: InvoiceStatus[] = [
+  'Draft',
+  'PendingApproval',
+  'PartiallyApproved',
+  'Approved',
+  'Rejected',
+];
 
 export async function GET(request: NextRequest) {
   try {

@@ -176,7 +176,9 @@ export default function Home() {
     }, 50);
   };
 
-  const pendingInvoices = invoices.filter(i => i.status === 'PendingApproval');
+  const pendingInvoices = invoices.filter(
+    i => i.status === 'PendingApproval' || i.status === 'PartiallyApproved'
+  );
   const approvedInvoices = invoices.filter(i => i.status === 'Approved');
   const totalVolume = invoices.reduce((acc, inv) => acc + (inv.amount || 0), 0);
   const pendingVolume = pendingInvoices.reduce((acc, inv) => acc + (inv.amount || 0), 0);
@@ -536,7 +538,11 @@ export default function Home() {
                     {pendingInvoices.map(invoice => (
                       <li key={invoice.id}>
                         <div className="pending-invoice-info">
-                          <span className="pending-badge">Pending Review</span>
+                          <span className="pending-badge">
+                            {invoice.status === 'PartiallyApproved'
+                              ? 'Partially Approved (1/2)'
+                              : 'Pending Review'}
+                          </span>
                           <span className="pending-details">
                             {`${invoice.id} · ${invoice.customerName} · ${money.format(invoice.amount)}`}
                           </span>
