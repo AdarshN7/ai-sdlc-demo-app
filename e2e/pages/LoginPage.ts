@@ -6,6 +6,7 @@ export class LoginPage {
   readonly passwordInput: Locator;
   readonly submitButton: Locator;
   readonly errorAlert: Locator;
+  readonly userSwitcher: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -13,6 +14,7 @@ export class LoginPage {
     this.passwordInput = page.getByLabel('Password');
     this.submitButton = page.getByRole('button', { name: 'Sign in' });
     this.errorAlert = page.locator('#login-error');
+    this.userSwitcher = page.locator('#user-switcher');
   }
 
   async goto() {
@@ -23,6 +25,10 @@ export class LoginPage {
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
+  }
+
+  async selectUser(username: string) {
+    await this.userSwitcher.selectOption(username);
   }
 
   async getErrorMessage(): Promise<string> {

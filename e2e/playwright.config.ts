@@ -16,5 +16,8 @@ export default defineConfig({
     url: 'http://localhost:3001',
     reuseExistingServer: false,
     timeout: 120_000,
+    env: {
+      ALLOW_TEST_RESET: 'true',
+    },
   },
 });

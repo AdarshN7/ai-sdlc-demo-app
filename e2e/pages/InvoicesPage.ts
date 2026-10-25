@@ -10,6 +10,8 @@ export class InvoicesPage {
   readonly createInvoiceButton: Locator;
   readonly createErrorAlert: Locator;
   readonly decisionErrorAlert: Locator;
+  readonly approvalErrorAlert: Locator;
+  readonly userSwitcher: Locator;
   readonly whoAmI: Locator;
 
   constructor(page: Page) {
@@ -22,7 +24,13 @@ export class InvoicesPage {
     this.createInvoiceButton = page.getByRole('button', { name: 'Create invoice' });
     this.createErrorAlert = page.locator('#create-error');
     this.decisionErrorAlert = page.locator('#decision-error');
+    this.approvalErrorAlert = page.locator('#approval-error');
+    this.userSwitcher = page.locator('#user-switcher');
     this.whoAmI = page.locator('#whoami');
+  }
+
+  async switchUser(username: string) {
+    await this.userSwitcher.selectOption(username);
   }
 
   async selectInvoicesTab() {

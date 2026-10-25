@@ -87,4 +87,62 @@ test.describe('Invoice App Workflows', () => {
     const row = page.getByRole('row').filter({ hasText: 'INV-1002' });
     await expect(row.getByRole('cell', { name: 'Rejected' })).toBeVisible();
   });
+
+  test('Manager is rejected when attempting to approve over-limit invoice ($75,000)', async ({ page, request }) => {
+    // 1. Reset state via /api/test/reset
+    const resetResponse = await request.post('/api/test/reset');
+    expect(resetResponse.ok()).toBeTruthy();
+
+    const loginPage = new LoginPage(page);
+    const invoicesPage = new InvoicesPage(page);
+
+    // 2. Sign in as Manager
+    await loginPage.goto();
+    await loginPage.login('demo.manager', 'ChangeMe123!');
+    await expect(page.getByText('demo.manager (Manager)', { exact: true })).toBeVisible();
+
+    // 3. Manager attempts to approve INV-1002 ($75,000)
+    await invoicesPage.selectApprovalsTab();
+    const approveBtn = page.getByRole('button', { name: 'Approve invoice INV-1002' });
+    await expect(approveBtn).toBeVisible();
+    await approveBtn.click();
+
+    // 4. Verify error message appears with returned rejection reason
+    await expect(invoicesPage.approvalErrorAlert).toBeVisible();
+    await expect(invoicesPage.approvalErrorAlert).toContainText('LIMIT_EXCEEDED');
+    await expect(invoicesPage.approvalErrorAlert).toContainText('exceeds Manager approval limit');
+
+    // 5. Verify status remains PendingApproval in pending list
+    await expect(page.getByRole('button', { name: 'Approve invoice INV-1002' })).toBeVisible();
+
+    // Verify status in invoices table is Pending Approval
+    await invoicesPage.selectInvoicesTab();
+    const row = page.getByRole('row').filter({ hasText: 'INV-1002' });
+    await expect(row.getByRole('cell', { name: 'Pending Approval' })).toBeVisible();
+
+    // 6. Verify status remains PendingApproval even after page reload
+    await page.reload();
+    await expect(invoicesPage.invoicesTab).toBeVisible();
+
+    const rowAfterReload = page.getByRole('row').filter({ hasText: 'INV-1002' });
+    await expect(rowAfterReload.getByRole('cell', { name: 'Pending Approval' })).toBeVisible();
+
+    await invoicesPage.selectApprovalsTab();
+    await expect(page.getByRole('button', { name: 'Approve invoice INV-1002' })).toBeVisible();
+  });
+
+  test('User can select Manager role using user switcher', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const invoicesPage = new InvoicesPage(page);
+
+    await loginPage.goto();
+    await loginPage.selectUser('demo.manager');
+    await loginPage.submitButton.click();
+
+    await expect(page.getByText('demo.manager (Manager)', { exact: true })).toBeVisible();
+
+    // Switch to Director inside dashboard
+    await invoicesPage.switchUser('demo.director');
+    await expect(page.getByText('demo.director (Director)', { exact: true })).toBeVisible();
+  });
 });
