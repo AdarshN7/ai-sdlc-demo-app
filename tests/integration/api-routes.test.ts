@@ -253,20 +253,43 @@ describe('API Route Handlers Integration', () => {
       expect(data.decidedBy).toBe('demo.director1');
     });
 
-    it('POST /api/approvals/[id]/approve returns 422 with LIMIT_EXCEEDED when Director approves > 500k as single approver', async () => {
+    it('POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices', async () => {
       const repo = getInvoiceRepository();
+      const sessionStore = getSessionStore();
+      const director2Token = sessionStore.create({ username: 'demo.director2', role: 'Director' });
+
       const beforeInvoice = await repo.getById('INV-1003');
       expect(beforeInvoice?.amount).toBe(600000);
 
-      const req = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: directorToken });
-      const res = await approveRoute(req, { params: { id: 'INV-1003' } });
+      // 1st approval by Director 1 moves to PartiallyApproved
+      const req1 = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: directorToken });
+      const res1 = await approveRoute(req1, { params: { id: 'INV-1003' } });
+      expect(res1.status).toBe(200);
+      const data1 = await res1.json();
+      expect(data1.status).toBe('PartiallyApproved');
+      expect(data1.approvals).toHaveLength(1);
 
-      expect(res.status).toBe(422);
-      const data = await res.json();
-      expect(data.reason).toBe('LIMIT_EXCEEDED');
+      // Duplicate approval attempt by same Director returns 422 SAME_APPROVER
+      const dupReq = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: directorToken });
+      const dupRes = await approveRoute(dupReq, { params: { id: 'INV-1003' } });
+      expect(dupRes.status).toBe(422);
+      const dupData = await dupRes.json();
+      expect(dupData.reason).toBe('SAME_APPROVER');
 
-      const afterInvoice = await repo.getById('INV-1003');
-      expect(afterInvoice).toEqual(beforeInvoice);
+      // 2nd approver as Manager returns 422 SECOND_APPROVER_NOT_DIRECTOR
+      const mgrReq = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: managerToken });
+      const mgrRes = await approveRoute(mgrReq, { params: { id: 'INV-1003' } });
+      expect(mgrRes.status).toBe(422);
+      const mgrData = await mgrRes.json();
+      expect(mgrData.reason).toBe('SECOND_APPROVER_NOT_DIRECTOR');
+
+      // 2nd approval by distinct Director returns 200 and transitions to Approved
+      const req2 = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: director2Token });
+      const res2 = await approveRoute(req2, { params: { id: 'INV-1003' } });
+      expect(res2.status).toBe(200);
+      const data2 = await res2.json();
+      expect(data2.status).toBe('Approved');
+      expect(data2.approvals).toHaveLength(2);
     });
 
     it('POST /api/approvals/[id]/reject requires non-empty reason', async () => {

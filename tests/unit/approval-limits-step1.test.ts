@@ -126,13 +126,14 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       }
     });
 
-    it('Director rejected for 500,001 as sole approver in Step 1', () => {
+    it('Director cannot sole-approve 500,001 to Approved status (held for dual approval)', () => {
       const invoice = createInvoice(500_001);
       const result = evaluateApproval(invoice, { id: 'dir-1', role: 'Director' });
 
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.reason).toBe('LIMIT_EXCEEDED');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.invoice.status).toBe('PartiallyApproved');
+        expect(result.invoice.status).not.toBe('Approved');
       }
     });
 
@@ -153,8 +154,14 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       expect(invoice).toEqual(invoiceSnapshot);
     });
 
-    it('Preserves deep equality of invoice on Director limit rejection', () => {
-      const invoice = createInvoice(600_000);
+    it('Preserves deep equality of invoice on duplicate Director approval rejection', () => {
+      const invoice: Invoice = {
+        ...createInvoice(600_000),
+        status: 'PartiallyApproved',
+        approvals: [
+          { userId: 'dir-1', role: 'Director', timestamp: '2026-01-01T00:00:00.000Z' },
+        ],
+      };
       const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
 
       const result = evaluateApproval(invoice, { id: 'dir-1', role: 'Director' });
@@ -213,19 +220,28 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       expect(stored?.status).toBe('Approved');
     });
 
-    it('throws ApprovalRejectedError with reason LIMIT_EXCEEDED when Director approves > 500,000', async () => {
+    it('throws ApprovalRejectedError with reason SAME_APPROVER when Director approves > 500,000 twice', async () => {
       const invoice = createInvoice(600_000, 'INV-1003');
-      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
       const repo = new FakeInvoiceRepository(invoice);
       const service = new ApprovalService(repo);
+
+      await service.approve('INV-1003', 'demo.director', 'Director');
+      const partialStored = await repo.getById('INV-1003');
+      const partialSnapshot = JSON.parse(JSON.stringify(partialStored));
 
       await expect(
         service.approve('INV-1003', 'demo.director', 'Director')
       ).rejects.toThrow(ApprovalRejectedError);
 
+      try {
+        await service.approve('INV-1003', 'demo.director', 'Director');
+      } catch (err) {
+        expect((err as ApprovalRejectedError).reason).toBe('SAME_APPROVER');
+      }
+
       // Repository invoice must remain completely unchanged
       const stored = await repo.getById('INV-1003');
-      expect(stored).toEqual(invoiceSnapshot);
+      expect(stored).toEqual(partialSnapshot);
     });
   });
 });
