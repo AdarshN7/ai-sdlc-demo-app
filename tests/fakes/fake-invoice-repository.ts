@@ -2,9 +2,11 @@ import { Invoice } from '@/domain/invoice';
 import { IInvoiceRepository } from '@/domain/invoice-repository.interface';
 
 export class FakeInvoiceRepository implements IInvoiceRepository {
+  private readonly initialSeed: Invoice[];
   private readonly invoices: Invoice[] = [];
 
   constructor(...seed: Invoice[]) {
+    this.initialSeed = seed.map(i => ({ ...i }));
     this.invoices.push(...seed.map(i => ({ ...i })));
   }
 
@@ -50,5 +52,10 @@ export class FakeInvoiceRepository implements IInvoiceRepository {
     this.invoices.length = 0;
     this.invoices.push(...remaining);
     return remaining.length < initialLen;
+  }
+
+  async reset(): Promise<void> {
+    this.invoices.length = 0;
+    this.invoices.push(...this.initialSeed.map(i => ({ ...i })));
   }
 }

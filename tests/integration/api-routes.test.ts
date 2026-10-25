@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST as loginRoute } from '@/app/api/auth/login/route';
 import { POST as logoutRoute } from '@/app/api/auth/logout/route';
@@ -7,6 +7,7 @@ import { GET as getInvoiceByIdRoute, DELETE as deleteInvoiceRoute } from '@/app/
 import { POST as submitInvoiceRoute } from '@/app/api/invoices/[id]/submit/route';
 import { POST as approveRoute } from '@/app/api/approvals/[id]/approve/route';
 import { POST as rejectRoute } from '@/app/api/approvals/[id]/reject/route';
+import { POST as resetRoute } from '@/app/api/test/reset/route';
 import { getSessionStore } from '@/infrastructure/auth/session-store';
 import { getInvoiceRepository } from '@/infrastructure/in-memory-invoice-repository';
 
@@ -60,6 +61,24 @@ describe('API Route Handlers Integration', () => {
       expect(res.status).toBe(401);
       const data = await res.json();
       expect(data.error).toBe('Invalid username or password.');
+    });
+
+    it('login returns 200 with Manager and Director roles', async () => {
+      const managerReq = createRequest('/api/auth/login', 'POST', {
+        body: { username: 'demo.manager', password: 'ChangeMe123!' },
+      });
+      const managerRes = await loginRoute(managerReq);
+      expect(managerRes.status).toBe(200);
+      const managerData = await managerRes.json();
+      expect(managerData.role).toBe('Manager');
+
+      const directorReq = createRequest('/api/auth/login', 'POST', {
+        body: { username: 'demo.director1', password: 'ChangeMe123!' },
+      });
+      const directorRes = await loginRoute(directorReq);
+      expect(directorRes.status).toBe(200);
+      const directorData = await directorRes.json();
+      expect(directorData.role).toBe('Director');
     });
 
     it('logout returns 204 and clears session', async () => {
@@ -214,6 +233,38 @@ describe('API Route Handlers Integration', () => {
       expect(data.status).toBe('Rejected');
       expect(data.decisionNote).toBe('Price too high');
       expect(data.decidedBy).toBe('demo.approver');
+    });
+  });
+
+  describe('Test Reset Route', () => {
+    it('POST /api/test/reset restores default seed invoices and counter', async () => {
+      const repo = getInvoiceRepository();
+      // Add an extra invoice
+      await repo.add({ customerName: 'Temp School', amount: 123 });
+      expect((await repo.getAll()).length).toBe(6);
+
+      const res = await resetRoute();
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.message).toBe('Reset successful');
+
+      const invoices = await repo.getAll();
+      expect(invoices.length).toBe(5);
+      expect(invoices.find(i => i.id === 'INV-1001')?.amount).toBe(40000);
+      expect(invoices.find(i => i.id === 'INV-1002')?.amount).toBe(75000);
+      expect(invoices.find(i => i.id === 'INV-1003')?.amount).toBe(600000);
+    });
+
+    it('POST /api/test/reset returns 404 when NODE_ENV is production', async () => {
+      try {
+        vi.stubEnv('NODE_ENV', 'production');
+        const res = await resetRoute();
+        expect(res.status).toBe(404);
+        const data = await res.json();
+        expect(data.error).toBe('Not found');
+      } finally {
+        vi.unstubAllEnvs();
+      }
     });
   });
 });

@@ -35,6 +35,10 @@ Invoice approval demo app: Full-stack Next.js App Router application in TypeScri
 
 - `demo.approver` / `ChangeMe123!` (role Approver)
 - `demo.admin` / `ChangeMe123!` (role Admin)
+- `demo.manager` / `ChangeMe123!` (role Manager)
+- `demo.director` / `ChangeMe123!` (role Director)
+- `demo.director1` / `ChangeMe123!` (role Director)
+- `demo.director2` / `ChangeMe123!` (role Director)
 
 ## Never
 

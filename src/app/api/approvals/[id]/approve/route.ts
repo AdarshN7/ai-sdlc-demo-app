@@ -9,7 +9,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = requireAuth(request, ['Approver', 'Admin']);
+    const session = requireAuth(request, ['Approver', 'Admin', 'Manager', 'Director']);
 
     const repository = getInvoiceRepository();
     const service = new ApprovalService(repository);

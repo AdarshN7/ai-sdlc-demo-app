@@ -7,4 +7,5 @@ export interface IInvoiceRepository {
   add(invoice: Omit<Invoice, 'id' | 'createdAt' | 'status'> & Partial<Pick<Invoice, 'id' | 'createdAt' | 'status'>>): Promise<Invoice>;
   update(invoice: Invoice): Promise<void>;
   remove(id: string): Promise<boolean>;
+  reset(): Promise<void>;
 }
