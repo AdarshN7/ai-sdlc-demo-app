@@ -10,6 +10,7 @@ export class InvoicesPage {
   readonly createInvoiceButton: Locator;
   readonly createErrorAlert: Locator;
   readonly decisionErrorAlert: Locator;
+  readonly whoAmI: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -21,6 +22,7 @@ export class InvoicesPage {
     this.createInvoiceButton = page.getByRole('button', { name: 'Create invoice' });
     this.createErrorAlert = page.locator('#create-error');
     this.decisionErrorAlert = page.locator('#decision-error');
+    this.whoAmI = page.locator('#whoami');
   }
 
   async selectInvoicesTab() {

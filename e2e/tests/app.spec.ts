@@ -10,7 +10,7 @@ test.describe('Invoice App Workflows', () => {
     await loginPage.goto();
     await loginPage.login('demo.approver', 'ChangeMe123!');
 
-    await expect(page.getByText('demo.approver (Approver)')).toBeVisible();
+    await expect(page.getByText('demo.approver (Approver)', { exact: true })).toBeVisible();
     await expect(invoicesPage.invoicesTab).toBeVisible();
 
     await invoicesPage.signOut();

@@ -584,7 +584,7 @@ export default function Home() {
             {/* Dashboard Footer to anchor the card bottom cleanly */}
             <footer className="dashboard-footer">
               <span>Invoice Approvals Demo App</span>
-              <span>Session: <strong>{session.username}</strong> ({session.role})</span>
+              <span>Session active: <strong>{session.username}</strong></span>
             </footer>
           </div>
         )}
