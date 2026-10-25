@@ -9,7 +9,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = requireAuth(request, ['Approver', 'Admin']);
+    const session = requireAuth(request, ['Approver', 'Admin', 'Manager', 'Director']);
 
     const body = await request.json().catch(() => ({}));
     const reason = body?.reason;

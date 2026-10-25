@@ -1,0 +1,83 @@
+[33m11:36:07 (64234) WARN ProjectReader[39m Glob pattern "!src/**/*.test.ts" did not exclude any files.
+[32m11:36:07 (64234) INFO ProjectReader[39m Found 5 of 1001 file(s) to be mutated.
+[32m11:36:07 (64234) INFO Instrumenter[39m Instrumented 5 source file(s) with 66 mutant(s)
+[32m11:36:08 (64234) INFO ConcurrencyTokenProvider[39m Creating 9 test runner process(es).
+[32m11:36:08 (64234) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
+[32m11:36:09 (64234) INFO DryRunExecutor[39m Initial test run succeeded. Ran 32 tests in 0 seconds (net 10.00754599999982 ms, overhead 346.9924540000002 ms).
+
+All tests
+  integration/api-routes.test.ts
+    ✘ API Route Handlers Integration Auth Routes login returns 200 with token and role for valid credentials [line 44] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes login returns 401 for invalid credentials [line 56] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes login returns 200 with Manager and Director roles [line 66] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes logout returns 204 and clears session [line 84] (covered 0)
+    ~ API Route Handlers Integration Invoices Routes GET /api/invoices requires authentication [line 93] (covered 1)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices returns all seed invoices for authenticated user [line 99] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices filters by status [line 107] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices returns 400 for unknown status [line 115] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices validates required customer name [line 123] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices validates amount > 0 [line 134] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices creates a new draft invoice [line 145] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices/[id] returns invoice if found or 404 [line 160] (covered 0)
+    ~ API Route Handlers Integration Invoices Routes DELETE /api/invoices/[id] returns 403 for non-Admin [line 170] (covered 1)
+    ✘ API Route Handlers Integration Invoices Routes DELETE /api/invoices/[id] returns 204 for Admin [line 176] (covered 0)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/invoices/[id]/submit moves draft to PendingApproval [line 188] (killed 7)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/invoices/[id]/submit returns 409 if invoice is not Draft [line 196] (killed 3)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve approves pending invoice [line 204] (killed 5)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject requires non-empty reason [line 214] (killed 7)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject rejects pending invoice with reason [line 225] (killed 3)
+    ✘ API Route Handlers Integration Test Reset Route POST /api/test/reset restores default seed invoices and counter [line 240] (covered 0)
+    ✘ API Route Handlers Integration Test Reset Route POST /api/test/reset returns 404 when NODE_ENV is production [line 258] (covered 0)
+  unit
+    approval-service.test.ts
+      ✓ ApprovalService Submit_MovesDraftToPendingApproval [line 19] (killed 1)
+      ✓ ApprovalService Submit_RejectsInvoiceThatIsNotADraft [line 26] (killed 1)
+      ~ ApprovalService Approve_SetsStatusApproverAndTimestamp [line 32] (covered 12)
+      ✓ ApprovalService Approve_RejectsInvoiceThatIsStillADraft [line 41] (killed 4)
+      ✓ ApprovalService Approve_ThrowsWhenInvoiceDoesNotExist [line 47] (killed 2)
+      ~ ApprovalService Reject_RecordsReasonAndApprover [line 53] (covered 19)
+      ✓ ApprovalService Reject_RequiresAReason [line 63] (killed 1)
+    discount-calculator.test.ts
+      ✓ DiscountCalculator calculates quantity discount tiers [line 7] (killed 13)
+      ✓ DiscountCalculator calculates loyalty discount capped at 10% [line 17] (killed 3)
+      ✓ DiscountCalculator calculates combined discount with optional nonprofit bonus [line 23] (killed 8)
+      ✓ DiscountCalculator applies discount correctly with rounding [line 28] (killed 5)
+
+[Survived] CallExpression
+src/domain/approval-service.ts:43:5
+-       this.ensurePending(invoice);
++       ;
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject rejects pending invoice with reason
+    ApprovalService Reject_RecordsReasonAndApprover
+
+
+[Survived] StringLiteral
+src/domain/approval-service.ts:56:31
+-         throw new NotFoundError(`Invoice ${invoiceId} was not found.`);
++         throw new NotFoundError(``);
+Tests ran:
+    ApprovalService Approve_ThrowsWhenInvoiceDoesNotExist
+
+
+[Survived] StringLiteral
+src/domain/approval-service.ts:64:9
+-           `Invoice ${invoice.id} is ${invoice.status}; only pending invoices can be decided.`
++           ``
+Tests ran:
+    ApprovalService Approve_RejectsInvoiceThatIsStillADraft
+
+
+Ran 1.27 tests per mutant on average.
+------------------------|------------------|----------|-----------|------------|----------|----------|
+                        | % Mutation score |          |           |            |          |          |
+File                    |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+------------------------|--------|---------|----------|-----------|------------|----------|----------|
+All files               |  95.45 |   95.45 |       63 |         0 |          3 |        0 |        0 |
+ approval-service.ts    |  91.67 |   91.67 |       33 |         0 |          3 |        0 |        0 |
+ discount-calculator.ts | 100.00 |  100.00 |       29 |         0 |          0 |        0 |        0 |
+ errors.ts              | 100.00 |  100.00 |        1 |         0 |          0 |        0 |        0 |
+------------------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m11:36:11 (64234) INFO JsonReporter[39m Your report can be found at: file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/reports/mutation/mutation.json
+[32m11:36:11 (64234) INFO HtmlReporter[39m Your report can be found at: file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/reports/mutation/mutation.html
+[32m11:36:11 (64234) INFO MutationTestExecutor[39m Done in 3 seconds.

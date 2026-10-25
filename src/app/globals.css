@@ -989,13 +989,13 @@ form#login-form {
 }
 
 .demo-pill-btn-group {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
 .demo-chip {
-  flex: 1;
-  padding: 6px 10px;
+  padding: 8px 10px;
   font-size: 11.5px;
   font-weight: 600;
   border-radius: var(--radius-md);

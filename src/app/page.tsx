@@ -2,6 +2,16 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Invoice } from '@/domain/invoice';
+import { DEMO_USERS } from '@/infrastructure/auth/user-session';
+
+const DEMO_ACCOUNT_LABELS: Record<string, string> = {
+  'demo.approver': 'Approver Demo',
+  'demo.admin': 'Admin Demo',
+  'demo.manager': 'Manager Demo',
+  'demo.director': 'Director Demo',
+  'demo.director1': 'Director 1 Demo',
+  'demo.director2': 'Director 2 Demo',
+};
 
 interface StoredSession {
   token: string;
@@ -243,26 +253,20 @@ export default function Home() {
             <div className="demo-account-pills">
               <div className="demo-pills-label">Quick Sign-in (Demo Accounts)</div>
               <div className="demo-pill-btn-group">
-                <button
-                  type="button"
-                  className="demo-chip"
-                  onClick={() => {
-                    setUsername('demo.approver');
-                    setPassword('ChangeMe123!');
-                  }}
-                >
-                  Approver Demo
-                </button>
-                <button
-                  type="button"
-                  className="demo-chip"
-                  onClick={() => {
-                    setUsername('demo.admin');
-                    setPassword('ChangeMe123!');
-                  }}
-                >
-                  Admin Demo
-                </button>
+                {DEMO_USERS.map((user) => (
+                  <button
+                    key={user.username}
+                    type="button"
+                    className="demo-chip"
+                    onClick={() => {
+                      setUsername(user.username);
+                      setPassword(user.password);
+                      setLoginError('');
+                    }}
+                  >
+                    {DEMO_ACCOUNT_LABELS[user.username] || `${user.role} Demo`}
+                  </button>
+                ))}
               </div>
             </div>
           </section>

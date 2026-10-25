@@ -1,50 +1,50 @@
 import { Invoice } from '@/domain/invoice';
 import { IInvoiceRepository } from '@/domain/invoice-repository.interface';
 
+const DEFAULT_INVOICES: Invoice[] = [
+  {
+    id: 'INV-1001',
+    customerName: 'Lakeside School District',
+    amount: 40000.00,
+    status: 'PendingApproval',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'INV-1002',
+    customerName: 'Hilltop Academy',
+    amount: 75000.00,
+    status: 'PendingApproval',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'INV-1003',
+    customerName: 'Riverside Charter',
+    amount: 600000.00,
+    status: 'PendingApproval',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'INV-1004',
+    customerName: 'Oakwood Independent',
+    amount: 615.75,
+    status: 'PendingApproval',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'INV-1005',
+    customerName: 'Maple Grove Prep',
+    amount: 310.00,
+    status: 'Draft',
+    createdAt: new Date().toISOString(),
+  },
+];
+
 /**
  * In-memory store so the demo app runs with no database. Seeded with default invoices.
  */
 export class InMemoryInvoiceRepository implements IInvoiceRepository {
   private nextNumber = 1006;
-  private readonly invoices: Invoice[] = [
-    {
-      id: 'INV-1001',
-      customerName: 'Lakeside School District',
-      amount: 4250.00,
-      status: 'PendingApproval',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'INV-1002',
-      customerName: 'Hilltop Academy',
-      amount: 980.50,
-      status: 'PendingApproval',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'INV-1003',
-      customerName: 'Riverside Charter',
-      amount: 12300.00,
-      status: 'Approved',
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      decidedBy: 'demo.approver',
-      decidedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'INV-1004',
-      customerName: 'Oakwood Independent',
-      amount: 615.75,
-      status: 'PendingApproval',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'INV-1005',
-      customerName: 'Maple Grove Prep',
-      amount: 310.00,
-      status: 'Draft',
-      createdAt: new Date().toISOString(),
-    },
-  ];
+  private readonly invoices: Invoice[] = DEFAULT_INVOICES.map(i => ({ ...i }));
 
   async getAll(): Promise<Invoice[]> {
     return [...this.invoices.map(i => ({ ...i }))];
@@ -89,6 +89,12 @@ export class InMemoryInvoiceRepository implements IInvoiceRepository {
     this.invoices.length = 0;
     this.invoices.push(...remaining);
     return remaining.length < initialLen;
+  }
+
+  async reset(): Promise<void> {
+    this.invoices.length = 0;
+    this.invoices.push(...DEFAULT_INVOICES.map(i => ({ ...i })));
+    this.nextNumber = 1006;
   }
 }
 

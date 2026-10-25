@@ -2,9 +2,12 @@
 node_modules/
 .next/
 .env
+*.tsbuildinfo
 test-results/
 playwright-report/
-
+reports/
+.stryker-tmp/
+FRS-Roadmap-implementation-plan/
 # AI interaction logging — temporary files only
 .ai-sdlc/.seen-events/
 .ai-sdlc/.lock/
