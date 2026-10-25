@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import {
+  ApprovalRejectedError,
   ConflictError,
   DomainError,
   ForbiddenError,
@@ -20,6 +21,18 @@ export function handleApiError(error: unknown): NextResponse {
   if (error instanceof ValidationError) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  if (error instanceof ApprovalRejectedError) {
+    return NextResponse.json(
+      {
+        error: error.message,
+        message: error.message,
+        reason: error.reason,
+      },
+      { status: 422 }
+    );
+  }
+
 
   if (error instanceof UnauthorizedError) {
     return NextResponse.json({ error: error.message || 'Unauthorized' }, { status: 401 });

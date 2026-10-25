@@ -13,7 +13,7 @@ export async function POST(
 
     const repository = getInvoiceRepository();
     const service = new ApprovalService(repository);
-    const updated = await service.approve(params.id, session.username);
+    const updated = await service.approve(params.id, session.username, session.role);
 
     return NextResponse.json(updated);
   } catch (error) {
