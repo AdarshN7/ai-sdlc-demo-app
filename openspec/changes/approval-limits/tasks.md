@@ -2,10 +2,10 @@
 
 ## 1. Step 1: Single-Approver Role Limits
 
-- [ ] 1.1 Define approval threshold constants (`MANAGER_APPROVAL_LIMIT = 50_000`, `DIRECTOR_APPROVAL_LIMIT = 500_000`) and rejection reason enum/types in `src/domain/approval-limits.ts`, and verify TypeScript compilation with `npx tsc --noEmit`.
-- [ ] 1.2 Implement test suite in `tests/unit/approval-limits-step1.test.ts` covering boundary values (49,999, 50,000, 50,001, 499,999, 500,000), Manager rejection with `LIMIT_EXCEEDED`, Director passing up to 500,000, and deep equality immutability of invoice upon rejection; verify tests fail prior to domain implementation.
-- [ ] 1.3 Implement pure domain approval function and integrate with `ApprovalService` in `src/domain/approval-service.ts` to enforce single-approver limits and return standardized `LIMIT_EXCEEDED` reason; verify with `npm test`.
-- [ ] 1.4 Wire route handlers in `src/app/api/approvals/[id]/approve/route.ts` to surface reason codes and structured messages on limit rejections; verify with `tests/integration/api-routes.test.ts`.
+- [x] 1.1 Define approval threshold constants (`MANAGER_APPROVAL_LIMIT = 50_000`, `DIRECTOR_APPROVAL_LIMIT = 500_000`) and rejection reason enum/types in `src/domain/approval-limits.ts`, and verify TypeScript compilation with `npx tsc --noEmit`.
+- [x] 1.2 Implement test suite in `tests/unit/approval-limits-step1.test.ts` covering boundary values (49,999, 50,000, 50,001, 499,999, 500,000), Manager rejection with `LIMIT_EXCEEDED`, Director passing up to 500,000, and deep equality immutability of invoice upon rejection; verify tests fail prior to domain implementation.
+- [x] 1.3 Implement pure domain approval function and integrate with `ApprovalService` in `src/domain/approval-service.ts` to enforce single-approver limits and return standardized `LIMIT_EXCEEDED` reason; verify with `npm test`.
+- [x] 1.4 Wire route handlers in `src/app/api/approvals/[id]/approve/route.ts` to surface reason codes and structured messages on limit rejections; verify with `tests/integration/api-routes.test.ts`.
 
 ## 2. Step 2: High-Value Dual-Approver Rule
 

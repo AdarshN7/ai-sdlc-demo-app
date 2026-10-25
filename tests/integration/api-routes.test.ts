@@ -14,6 +14,8 @@ import { getInvoiceRepository } from '@/infrastructure/in-memory-invoice-reposit
 describe('API Route Handlers Integration', () => {
   let approverToken: string;
   let adminToken: string;
+  let managerToken: string;
+  let directorToken: string;
 
   beforeEach(async () => {
     // Reset session store and repo for clean test state
@@ -23,6 +25,8 @@ describe('API Route Handlers Integration', () => {
     const sessionStore = getSessionStore();
     approverToken = sessionStore.create({ username: 'demo.approver', role: 'Approver' });
     adminToken = sessionStore.create({ username: 'demo.admin', role: 'Admin' });
+    managerToken = sessionStore.create({ username: 'demo.manager', role: 'Manager' });
+    directorToken = sessionStore.create({ username: 'demo.director1', role: 'Director' });
   });
 
   const createRequest = (url: string, method: string, options: { token?: string; body?: any } = {}) => {
@@ -209,6 +213,60 @@ describe('API Route Handlers Integration', () => {
       expect(data.status).toBe('Approved');
       expect(data.decidedBy).toBe('demo.approver');
       expect(data.decidedAt).toBeDefined();
+    });
+
+    it('POST /api/approvals/[id]/approve returns 422 with LIMIT_EXCEEDED when Manager approves over 50k and leaves repo invoice unchanged', async () => {
+      const repo = getInvoiceRepository();
+      const beforeInvoice = await repo.getById('INV-1002');
+      expect(beforeInvoice?.amount).toBe(75000);
+      expect(beforeInvoice?.status).toBe('PendingApproval');
+
+      const req = createRequest('/api/approvals/INV-1002/approve', 'POST', { token: managerToken });
+      const res = await approveRoute(req, { params: { id: 'INV-1002' } });
+
+      expect(res.status).toBe(422);
+      const data = await res.json();
+      expect(data.reason).toBe('LIMIT_EXCEEDED');
+      expect(data.error).toContain('exceeds Manager approval limit');
+
+      const afterInvoice = await repo.getById('INV-1002');
+      expect(afterInvoice).toEqual(beforeInvoice);
+    });
+
+    it('POST /api/approvals/[id]/approve returns 200 when Manager approves invoice <= 50k', async () => {
+      const req = createRequest('/api/approvals/INV-1001/approve', 'POST', { token: managerToken });
+      const res = await approveRoute(req, { params: { id: 'INV-1001' } });
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.status).toBe('Approved');
+      expect(data.decidedBy).toBe('demo.manager');
+    });
+
+    it('POST /api/approvals/[id]/approve returns 200 when Director approves invoice <= 500k', async () => {
+      const req = createRequest('/api/approvals/INV-1002/approve', 'POST', { token: directorToken });
+      const res = await approveRoute(req, { params: { id: 'INV-1002' } });
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.status).toBe('Approved');
+      expect(data.decidedBy).toBe('demo.director1');
+    });
+
+    it('POST /api/approvals/[id]/approve returns 422 with LIMIT_EXCEEDED when Director approves > 500k as single approver', async () => {
+      const repo = getInvoiceRepository();
+      const beforeInvoice = await repo.getById('INV-1003');
+      expect(beforeInvoice?.amount).toBe(600000);
+
+      const req = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: directorToken });
+      const res = await approveRoute(req, { params: { id: 'INV-1003' } });
+
+      expect(res.status).toBe(422);
+      const data = await res.json();
+      expect(data.reason).toBe('LIMIT_EXCEEDED');
+
+      const afterInvoice = await repo.getById('INV-1003');
+      expect(afterInvoice).toEqual(beforeInvoice);
     });
 
     it('POST /api/approvals/[id]/reject requires non-empty reason', async () => {

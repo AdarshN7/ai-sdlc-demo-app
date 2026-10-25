@@ -1,6 +1,12 @@
 import { Invoice } from './invoice';
 import { IInvoiceRepository } from './invoice-repository.interface';
-import { ConflictError, NotFoundError, ValidationError } from './errors';
+import {
+  ApprovalRejectedError,
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from './errors';
+import { ApproverIdentity, evaluateApproval } from './approval-limits';
 
 /**
  * Moves an invoice through its lifecycle: Draft -> PendingApproval -> Approved or Rejected.
@@ -23,16 +29,34 @@ export class ApprovalService {
     return invoice;
   }
 
-  async approve(invoiceId: string, approver: string): Promise<Invoice> {
+  async approve(
+    invoiceId: string,
+    approver: string | ApproverIdentity,
+    role?: string
+  ): Promise<Invoice> {
     const invoice = await this.find(invoiceId);
-    this.ensurePending(invoice);
 
-    invoice.status = 'Approved';
-    invoice.decidedBy = approver;
-    invoice.decidedAt = new Date().toISOString();
-    await this.repository.update(invoice);
-    return invoice;
+    const identity: ApproverIdentity =
+      typeof approver === 'string'
+        ? { username: approver, id: approver, role: role ?? 'Approver' }
+        : {
+            username: approver.username || approver.id || 'unknown',
+            id: approver.id || approver.username,
+            role: approver.role ?? role ?? 'Approver',
+          };
+
+    const result = evaluateApproval(invoice, identity);
+    if (!result.ok) {
+      if (result.reason === 'INVOICE_NOT_PENDING') {
+        throw new ConflictError(result.message);
+      }
+      throw new ApprovalRejectedError(result.reason, result.message);
+    }
+
+    await this.repository.update(result.invoice);
+    return result.invoice;
   }
+
 
   async reject(invoiceId: string, approver: string, reason: string): Promise<Invoice> {
     if (!reason || reason.trim().length === 0) {
