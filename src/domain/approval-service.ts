@@ -40,7 +40,7 @@ export class ApprovalService {
       typeof approver === 'string'
         ? { username: approver, id: approver, role: role ?? 'Approver' }
         : {
-            username: approver.username || approver.id || 'unknown',
+            username: approver.username || approver.id,
             id: approver.id || approver.username,
             role: approver.role ?? role ?? 'Approver',
           };

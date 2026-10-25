@@ -30,6 +30,9 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       if (result.ok) {
         expect(result.invoice.status).toBe('Approved');
         expect(result.invoice.decidedBy).toBe('mgr-1');
+        expect(result.invoice.approvals).toHaveLength(1);
+        expect(result.invoice.approvals?.[0].userId).toBe('mgr-1');
+        expect(result.invoice.approvals?.[0].role).toBe('Manager');
       }
     });
 
@@ -41,6 +44,9 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       if (result.ok) {
         expect(result.invoice.status).toBe('Approved');
         expect(result.invoice.decidedBy).toBe('dir-1');
+        expect(result.invoice.approvals).toHaveLength(1);
+        expect(result.invoice.approvals?.[0].userId).toBe('dir-1');
+        expect(result.invoice.approvals?.[0].role).toBe('Director');
       }
     });
 
@@ -52,6 +58,8 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       if (result.ok) {
         expect(result.invoice.status).toBe('Approved');
         expect(result.invoice.decidedBy).toBe('mgr-1');
+        expect(result.invoice.approvals).toHaveLength(1);
+        expect(result.invoice.approvals?.[0].userId).toBe('mgr-1');
       }
     });
 
@@ -62,6 +70,8 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.invoice.status).toBe('Approved');
+        expect(result.invoice.approvals).toHaveLength(1);
+        expect(result.invoice.approvals?.[0].userId).toBe('dir-1');
       }
     });
 
@@ -72,6 +82,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.reason).toBe('LIMIT_EXCEEDED');
+        expect(result.message).toBe('Invoice amount 50001 exceeds Manager approval limit of 50000.');
       }
     });
 
@@ -82,6 +93,8 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.invoice.status).toBe('Approved');
+        expect(result.invoice.approvals).toHaveLength(1);
+        expect(result.invoice.approvals?.[0].userId).toBe('dir-1');
       }
     });
 
@@ -92,6 +105,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.reason).toBe('LIMIT_EXCEEDED');
+        expect(result.message).toBe('Invoice amount 499999 exceeds Manager approval limit of 50000.');
       }
     });
 
@@ -102,6 +116,8 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.invoice.status).toBe('Approved');
+        expect(result.invoice.approvals).toHaveLength(1);
+        expect(result.invoice.approvals?.[0].userId).toBe('dir-1');
       }
     });
 
@@ -112,6 +128,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.reason).toBe('LIMIT_EXCEEDED');
+        expect(result.message).toBe('Invoice amount 500000 exceeds Manager approval limit of 50000.');
       }
     });
 
@@ -123,6 +140,8 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       if (result.ok) {
         expect(result.invoice.status).toBe('Approved');
         expect(result.invoice.decidedBy).toBe('dir-1');
+        expect(result.invoice.approvals).toHaveLength(1);
+        expect(result.invoice.approvals?.[0].userId).toBe('dir-1');
       }
     });
 
@@ -134,12 +153,60 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       if (result.ok) {
         expect(result.invoice.status).toBe('PartiallyApproved');
         expect(result.invoice.status).not.toBe('Approved');
+        expect(result.invoice.approvals).toHaveLength(1);
+        expect(result.invoice.approvals?.[0].userId).toBe('dir-1');
       }
     });
 
     it('Exports expected constants: MANAGER_APPROVAL_LIMIT is 50,000 and DIRECTOR_APPROVAL_LIMIT is 500,000', () => {
       expect(MANAGER_APPROVAL_LIMIT).toBe(50_000);
       expect(DIRECTOR_APPROVAL_LIMIT).toBe(500_000);
+    });
+
+    it('Rejects non-pending invoice with INVOICE_NOT_PENDING and descriptive message', () => {
+      const invoice: Invoice = { ...createInvoice(100), status: 'Draft' };
+      const result = evaluateApproval(invoice, { id: 'mgr-1', role: 'Manager' });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('INVOICE_NOT_PENDING');
+        expect(result.message).toBe('Invoice INV-TEST is Draft; only pending invoices can be approved.');
+      }
+    });
+
+    it('Rejects single approval when user has unauthorized role', () => {
+      const invoice = createInvoice(25_000);
+      const result = evaluateApproval(invoice, { id: 'viewer-1', role: 'Viewer' });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('ROLE_NOT_ALLOWED');
+        expect(result.message).toBe('Role Viewer is not permitted to approve invoices.');
+      }
+    });
+
+    it('Allows Admin to approve invoice <= 500,000', () => {
+      const invoice = createInvoice(100_000);
+      const result = evaluateApproval(invoice, { id: 'admin-1', role: 'Admin' });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.invoice.status).toBe('Approved');
+        expect(result.invoice.approvals?.[0].role).toBe('Admin');
+      }
+    });
+
+    it('Defaults unknown approver id/name and Approver role when approver identity is blank', () => {
+      const invoice = createInvoice(10_000);
+      const result = evaluateApproval(invoice, {});
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.invoice.status).toBe('Approved');
+        expect(result.invoice.decidedBy).toBe('unknown');
+        expect(result.invoice.approvals?.[0].userId).toBe('unknown');
+        expect(result.invoice.approvals?.[0].role).toBe('Approver');
+      }
     });
   });
 

@@ -1,0 +1,444 @@
+
+> ai-sdlc-demo-app@1.0.0 mutate
+> stryker run
+
+[33m19:34:03 (31702) WARN ProjectReader[39m Glob pattern "!src/**/*.test.ts" did not exclude any files.
+[32m19:34:03 (31702) INFO ProjectReader[39m Found 6 of 1201 file(s) to be mutated.
+[32m19:34:03 (31702) INFO Instrumenter[39m Instrumented 6 source file(s) with 245 mutant(s)
+[32m19:34:04 (31702) INFO ConcurrencyTokenProvider[39m Creating 9 test runner process(es).
+[32m19:34:04 (31702) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
+[32m19:34:05 (31702) INFO DryRunExecutor[39m Initial test run succeeded. Ran 62 tests in 0 seconds (net 18.563126000000125 ms, overhead 572.4368739999999 ms).
+
+All tests
+  integration/api-routes.test.ts
+    ✘ API Route Handlers Integration Auth Routes login returns 200 with token and role for valid credentials [line 48] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes login returns 401 for invalid credentials [line 60] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes login returns 200 with Manager and Director roles [line 70] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes logout returns 204 and clears session [line 88] (covered 0)
+    ~ API Route Handlers Integration Invoices Routes GET /api/invoices requires authentication [line 97] (covered 1)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices returns all seed invoices for authenticated user [line 103] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices filters by status [line 111] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices returns 400 for unknown status [line 119] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices validates required customer name [line 127] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices validates amount > 0 [line 138] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices creates a new draft invoice [line 149] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices/[id] returns invoice if found or 404 [line 164] (covered 0)
+    ~ API Route Handlers Integration Invoices Routes DELETE /api/invoices/[id] returns 403 for non-Admin [line 174] (covered 1)
+    ✘ API Route Handlers Integration Invoices Routes DELETE /api/invoices/[id] returns 204 for Admin [line 180] (covered 0)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/invoices/[id]/submit moves draft to PendingApproval [line 192] (killed 8)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/invoices/[id]/submit returns 409 if invoice is not Draft [line 200] (killed 3)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve approves pending invoice [line 208] (killed 28)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 422 with LIMIT_EXCEEDED when Manager approves over 50k and leaves repo invoice unchanged [line 218] (killed 14)
+    ~ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Manager approves invoice <= 50k [line 236] (covered 54)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Director approves invoice <= 500k [line 246] (killed 7)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices [line 256] (killed 32)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject requires non-empty reason [line 295] (killed 7)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject rejects pending invoice with reason [line 306] (killed 7)
+    ✘ API Route Handlers Integration Test Reset Route POST /api/test/reset restores default seed invoices and counter [line 321] (covered 0)
+    ✘ API Route Handlers Integration Test Reset Route POST /api/test/reset returns 404 when NODE_ENV is production [line 339] (covered 0)
+  unit
+    approval-limits-step1.test.ts
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager approves 49,999 (below limit) [line 25] (covered 40)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 49,999 (below limit) [line 36] (covered 44)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager approves 50,000 (exact inclusive limit) [line 47] (killed 1)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 50,000 (exact Manager limit) [line 58] (covered 44)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 50,001 (exceeds limit by 1) [line 68] (covered 40)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 50,001 (within Director limit) [line 78] (covered 44)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 499,999 [line 88] (covered 40)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 499,999 [line 98] (covered 44)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 500,000 [line 108] (killed 1)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 500,000 (exact inclusive limit) [line 118] (covered 44)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director cannot sole-approve 500,001 to Approved status (held for dual approval) [line 129] (covered 45)
+      ✘ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Exports expected constants: MANAGER_APPROVAL_LIMIT is 50,000 and DIRECTOR_APPROVAL_LIMIT is 500,000 [line 140] (covered 0)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Deep Equality & Immutability when Validation Fails Preserves deep equality of invoice on Manager limit rejection [line 147] (covered 40)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Deep Equality & Immutability when Validation Fails Preserves deep equality of invoice on duplicate Director approval rejection [line 157] (covered 47)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration throws ApprovalRejectedError with reason LIMIT_EXCEEDED when Manager approves over 50,000 [line 175] (covered 61)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration successfully approves when Manager approves invoice <= 50,000 [line 197] (covered 54)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration successfully approves when Director approves invoice <= 500,000 [line 210] (covered 58)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration throws ApprovalRejectedError with reason SAME_APPROVER when Director approves > 500,000 twice [line 223] (covered 86)
+    approval-limits-step2.test.ts
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Manager leaves invoice partially approved awaiting second approver [line 22] (killed 10)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Director leaves invoice partially approved awaiting second approver [line 40] (killed 1)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Director marks it Approved [line 60] (killed 15)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval completes approval when 1st approver was a Manager [line 91] (covered 61)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) rejects with SAME_APPROVER when the same user attempts second approval [line 119] (killed 6)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) validates distinctness using userId, not display name or role [line 146] (covered 47)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 2: Non-Director Second Approver (SECOND_APPROVER_NOT_DIRECTOR) rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager [line 174] (killed 4)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) ApprovalService Integration for High-Value Invoices executes the full dual-approval workflow via ApprovalService [line 203] (killed 13)
+    approval-service.test.ts
+      ~ ApprovalService Submit_MovesDraftToPendingApproval [line 19] (covered 10)
+      ✓ ApprovalService Submit_RejectsInvoiceThatIsNotADraft [line 26] (killed 1)
+      ✓ ApprovalService Approve_SetsStatusApproverAndTimestamp [line 32] (killed 1)
+      ✓ ApprovalService Approve_RejectsInvoiceThatIsStillADraft [line 41] (killed 9)
+      ✓ ApprovalService Approve_ThrowsWhenInvoiceDoesNotExist [line 47] (killed 2)
+      ✓ ApprovalService Reject_RecordsReasonAndApprover [line 53] (killed 1)
+      ✓ ApprovalService Reject_RequiresAReason [line 63] (killed 1)
+    discount-calculator.test.ts
+      ✓ DiscountCalculator calculates quantity discount tiers [line 7] (killed 13)
+      ✓ DiscountCalculator calculates loyalty discount capped at 10% [line 17] (killed 3)
+      ✓ DiscountCalculator calculates combined discount with optional nonprofit bonus [line 23] (killed 8)
+      ✓ DiscountCalculator applies discount correctly with rounding [line 28] (killed 5)
+
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:40:58
+-     const approverId = approver.id || approver.username || 'unknown';
++     const approverId = approver.id || approver.username || "";
+
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:41:60
+-     const approverName = approver.username || approver.id || 'unknown';
++     const approverName = approver.username || approver.id || "";
+
+[NoCoverage] ConditionalExpression
+src/domain/approval-limits.ts:57:56
+-         if (role !== 'Manager' && role !== 'Director' && role !== 'Admin') {
++         if (role !== 'Manager' && role !== 'Director' && true) {
+
+[NoCoverage] EqualityOperator
+src/domain/approval-limits.ts:57:56
+-         if (role !== 'Manager' && role !== 'Director' && role !== 'Admin') {
++         if (role !== 'Manager' && role !== 'Director' && role === 'Admin') {
+
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:57:65
+-         if (role !== 'Manager' && role !== 'Director' && role !== 'Admin') {
++         if (role !== 'Manager' && role !== 'Director' && role !== "") {
+
+[NoCoverage] BlockStatement
+src/domain/approval-limits.ts:57:74
+-         if (role !== 'Manager' && role !== 'Director' && role !== 'Admin') {
+-           return {
+-             ok: false,
+-             reason: 'ROLE_NOT_ALLOWED',
+-             message: `Role ${role} is not permitted to approve invoices.`,
+-           };
+-         }
++         if (role !== 'Manager' && role !== 'Director' && role !== 'Admin') {}
+
+[NoCoverage] ObjectLiteral
+src/domain/approval-limits.ts:58:16
+-           return {
+-             ok: false,
+-             reason: 'ROLE_NOT_ALLOWED',
+-             message: `Role ${role} is not permitted to approve invoices.`,
+-           };
++           return {};
+
+[NoCoverage] BooleanLiteral
+src/domain/approval-limits.ts:59:15
+-             ok: false,
++             ok: true,
+
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:60:19
+-             reason: 'ROLE_NOT_ALLOWED',
++             reason: "",
+
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:61:20
+-             message: `Role ${role} is not permitted to approve invoices.`,
++             message: ``,
+
+[NoCoverage] ConditionalExpression
+src/domain/approval-limits.ts:126:37
+-     } else if (role === 'Director' || role === 'Admin') {
++     } else if (role === 'Director' || false) {
+
+[NoCoverage] EqualityOperator
+src/domain/approval-limits.ts:126:37
+-     } else if (role === 'Director' || role === 'Admin') {
++     } else if (role === 'Director' || role !== 'Admin') {
+
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:126:46
+-     } else if (role === 'Director' || role === 'Admin') {
++     } else if (role === 'Director' || role === "") {
+
+[NoCoverage] BlockStatement
+src/domain/approval-limits.ts:128:10
+-     } else {
+-       return {
+-         ok: false,
+-         reason: 'ROLE_NOT_ALLOWED',
+-         message: `Role ${role} is not permitted to approve invoices.`,
+-       };
+-     }
++     } else {}
+
+[NoCoverage] ObjectLiteral
+src/domain/approval-limits.ts:129:12
+-       return {
+-         ok: false,
+-         reason: 'ROLE_NOT_ALLOWED',
+-         message: `Role ${role} is not permitted to approve invoices.`,
+-       };
++       return {};
+
+[NoCoverage] BooleanLiteral
+src/domain/approval-limits.ts:130:11
+-         ok: false,
++         ok: true,
+
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:131:15
+-         reason: 'ROLE_NOT_ALLOWED',
++         reason: "",
+
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:132:16
+-         message: `Role ${role} is not permitted to approve invoices.`,
++         message: ``,
+
+[Survived] StringLiteral
+src/domain/approval-limits.ts:35:16
+-         message: `Invoice ${invoice.id} is ${invoice.status}; only pending invoices can be approved.`,
++         message: ``,
+Tests ran:
+    ApprovalService Approve_RejectsInvoiceThatIsStillADraft
+
+
+[Survived] ConditionalExpression
+src/domain/approval-limits.ts:57:11
+-         if (role !== 'Manager' && role !== 'Director' && role !== 'Admin') {
++         if (false) {
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Manager leaves invoice partially approved awaiting second approver
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Director leaves invoice partially approved awaiting second approver
+  and 3 more tests!
+
+
+[Survived] ConditionalExpression
+src/domain/approval-limits.ts:82:12
+-             (approver.id && a.userId === approver.id) ||
++             (false) ||
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Director marks it Approved
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval completes approval when 1st approver was a Manager
+  and 2 more tests!
+
+
+[Survived] LogicalOperator
+src/domain/approval-limits.ts:81:11
+-             a.userId === approverId ||
+-             (approver.id && a.userId === approver.id) ||
++             a.userId === approverId && approver.id && a.userId === approver.id ||
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Director marks it Approved
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval completes approval when 1st approver was a Manager
+  and 6 more tests!
+
+
+[Survived] ConditionalExpression
+src/domain/approval-limits.ts:81:11
+-             a.userId === approverId ||
++             false ||
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Director marks it Approved
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval completes approval when 1st approver was a Manager
+  and 6 more tests!
+
+
+[Survived] ConditionalExpression
+src/domain/approval-limits.ts:83:12
+-             (approver.username && a.userId === approver.username)
++             (false)
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Director marks it Approved
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval completes approval when 1st approver was a Manager
+  and 2 more tests!
+
+
+[Survived] MethodExpression
+src/domain/approval-limits.ts:79:30
+-         const isSameApprover = priorApprovals.some(
+-           (a) =>
+-             a.userId === approverId ||
+-             (approver.id && a.userId === approver.id) ||
+-             (approver.username && a.userId === approver.username)
+-         );
++         const isSameApprover = priorApprovals.every(a => a.userId === approverId || approver.id && a.userId === approver.id || approver.username && a.userId === approver.username);
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Director marks it Approved
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval completes approval when 1st approver was a Manager
+  and 6 more tests!
+
+
+[Survived] ConditionalExpression
+src/domain/approval-limits.ts:94:34
+-         if (role !== 'Director' && role !== 'Admin') {
++         if (role !== 'Director' && true) {
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 2: Non-Director Second Approver (SECOND_APPROVER_NOT_DIRECTOR) rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) ApprovalService Integration for High-Value Invoices executes the full dual-approval workflow via ApprovalService
+
+
+[Survived] StringLiteral
+src/domain/approval-limits.ts:89:20
+-             message: 'The same user cannot approve an invoice twice.',
++             message: "",
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) rejects with SAME_APPROVER when the same user attempts second approval
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) validates distinctness using userId, not display name or role
+  and 3 more tests!
+
+
+[Survived] StringLiteral
+src/domain/approval-limits.ts:94:43
+-         if (role !== 'Director' && role !== 'Admin') {
++         if (role !== 'Director' && role !== "") {
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 2: Non-Director Second Approver (SECOND_APPROVER_NOT_DIRECTOR) rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) ApprovalService Integration for High-Value Invoices executes the full dual-approval workflow via ApprovalService
+
+
+[Survived] StringLiteral
+src/domain/approval-limits.ts:98:20
+-             message: 'Second approval requires a Director.',
++             message: "",
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 2: Non-Director Second Approver (SECOND_APPROVER_NOT_DIRECTOR) rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) ApprovalService Integration for High-Value Invoices executes the full dual-approval workflow via ApprovalService
+
+
+[Survived] ConditionalExpression
+src/domain/approval-limits.ts:126:14
+-     } else if (role === 'Director' || role === 'Admin') {
++     } else if (true) {
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Director approves invoice <= 500k
+    Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 49,999 (below limit)
+    Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 50,000 (exact Manager limit)
+  and 4 more tests!
+
+
+[Survived] ArrayDeclaration
+src/domain/approval-limits.ts:142:16
+-       approvals: [...priorApprovals, newApproval],
++       approvals: [],
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve approves pending invoice
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Manager approves invoice <= 50k
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Director approves invoice <= 500k
+  and 10 more tests!
+
+
+[NoCoverage] StringLiteral
+src/domain/approval-service.ts:43:59
+-               username: approver.username || approver.id || 'unknown',
++               username: approver.username || approver.id || "",
+
+[NoCoverage] StringLiteral
+src/domain/approval-service.ts:45:44
+-               role: approver.role ?? role ?? 'Approver',
++               role: approver.role ?? role ?? "",
+
+[NoCoverage] ConditionalExpression
+src/domain/approval-service.ts:86:49
+-       if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {
++       if (invoice.status !== 'PendingApproval' && true) {
+
+[NoCoverage] EqualityOperator
+src/domain/approval-service.ts:86:49
+-       if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {
++       if (invoice.status !== 'PendingApproval' && invoice.status === 'PartiallyApproved') {
+
+[NoCoverage] StringLiteral
+src/domain/approval-service.ts:86:68
+-       if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {
++       if (invoice.status !== 'PendingApproval' && invoice.status !== "") {
+
+[NoCoverage] BlockStatement
+src/domain/approval-service.ts:86:89
+-       if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {
+-         throw new ConflictError(
+-           `Invoice ${invoice.id} is ${invoice.status}; only pending invoices can be decided.`
+-         );
+-       }
++       if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {}
+
+[NoCoverage] StringLiteral
+src/domain/approval-service.ts:88:9
+-           `Invoice ${invoice.id} is ${invoice.status}; only pending invoices can be decided.`
++           ``
+
+[Survived] ConditionalExpression
+src/domain/approval-service.ts:44:17
+-               id: approver.id || approver.username,
++               id: false,
+Tests ran:
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) ApprovalService Integration for High-Value Invoices executes the full dual-approval workflow via ApprovalService
+
+
+[Survived] LogicalOperator
+src/domain/approval-service.ts:44:17
+-               id: approver.id || approver.username,
++               id: approver.id && approver.username,
+Tests ran:
+    Phase 5: Step 2 – Two-Approver Rule (> 500,000) ApprovalService Integration for High-Value Invoices executes the full dual-approval workflow via ApprovalService
+
+
+[Survived] CallExpression
+src/domain/approval-service.ts:67:5
+-       this.ensurePending(invoice);
++       ;
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject rejects pending invoice with reason
+    ApprovalService Reject_RecordsReasonAndApprover
+
+
+[Survived] StringLiteral
+src/domain/approval-service.ts:80:31
+-         throw new NotFoundError(`Invoice ${invoiceId} was not found.`);
++         throw new NotFoundError(``);
+Tests ran:
+    ApprovalService Approve_ThrowsWhenInvoiceDoesNotExist
+
+
+[Survived] BlockStatement
+src/domain/approval-service.ts:85:49
+-     private ensurePending(invoice: Invoice): void {
+-       if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {
+-         throw new ConflictError(
+-           `Invoice ${invoice.id} is ${invoice.status}; only pending invoices can be decided.`
+-         );
+-       }
+-     }
++     private ensurePending(invoice: Invoice): void {}
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject rejects pending invoice with reason
+    ApprovalService Reject_RecordsReasonAndApprover
+
+
+[Survived] ConditionalExpression
+src/domain/approval-service.ts:86:9
+-       if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {
++       if (false) {
+Tests ran:
+    API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject rejects pending invoice with reason
+    ApprovalService Reject_RecordsReasonAndApprover
+
+
+Ran 1.81 tests per mutant on average.
+------------------------|------------------|----------|-----------|------------|----------|----------|
+                        | % Mutation score |          |           |            |          |          |
+File                    |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+------------------------|--------|---------|----------|-----------|------------|----------|----------|
+All files               |  82.04 |   91.36 |      201 |         0 |         19 |       25 |        0 |
+ approval-limits.ts     |  78.62 |   89.76 |      114 |         0 |         13 |       18 |        0 |
+ approval-service.ts    |  81.43 |   90.48 |       57 |         0 |          6 |        7 |        0 |
+ discount-calculator.ts | 100.00 |  100.00 |       29 |         0 |          0 |        0 |        0 |
+ errors.ts              | 100.00 |  100.00 |        1 |         0 |          0 |        0 |        0 |
+------------------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m19:34:11 (31702) INFO JsonReporter[39m Your report can be found at: file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/reports/mutation/mutation.json
+[32m19:34:11 (31702) INFO HtmlReporter[39m Your report can be found at: file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/reports/mutation/mutation.html
+[32m19:34:11 (31702) INFO MutationTestExecutor[39m Done in 7 seconds.
