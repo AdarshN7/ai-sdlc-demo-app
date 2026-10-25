@@ -13,7 +13,7 @@ export type ApprovalRejectionReason =
 export interface ApproverIdentity {
   id?: string;
   username?: string;
-  role: string;
+  role?: string;
 }
 
 export type ApprovalResult =
@@ -36,7 +36,7 @@ export function evaluateApproval(
     };
   }
 
-  const role = approver.role;
+  const role = approver.role ?? 'Approver';
   const approverId = approver.id || approver.username || 'unknown';
   const approverName = approver.username || approver.id || 'unknown';
   const now = new Date().toISOString();
@@ -76,12 +76,7 @@ export function evaluateApproval(
       // Second approval
       // Negative rule 1: Same user approving twice rejected with SAME_APPROVER
       // Compare unique userId (user.id === priorApproval.userId)
-      const isSameApprover = priorApprovals.some(
-        (a) =>
-          a.userId === approverId ||
-          (approver.id && a.userId === approver.id) ||
-          (approver.username && a.userId === approver.username)
-      );
+      const isSameApprover = priorApprovals.some((a) => a.userId === approverId);
       if (isSameApprover) {
         return {
           ok: false,
