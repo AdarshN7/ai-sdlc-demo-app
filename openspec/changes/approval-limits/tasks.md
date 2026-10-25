@@ -9,10 +9,10 @@
 
 ## 2. Step 2: High-Value Dual-Approver Rule
 
-- [ ] 2.1 Extend `Invoice` model in `src/domain/invoice.ts` to include `approvals: Array<{ userId: string; role: Role; approvedAt: string }>` while preserving backward compatibility; verify type checks with `npx tsc --noEmit`.
-- [ ] 2.2 Implement test suite in `tests/unit/approval-limits-step2.test.ts` covering invoices over 500,000: boundary 500,001, first approval holding status in pending, second approval by Director completing approval, negative rule for duplicate user (`SAME_APPROVER`), and negative rule for non-director second approver (`SECOND_APPROVER_NOT_DIRECTOR`); verify tests fail prior to implementation.
-- [ ] 2.3 Implement dual-approval logic in `src/domain/approval-service.ts` comparing approver IDs via `user.id === priorApproval.userId` and verifying Director role for the second approval; verify all domain tests pass with `npm test`.
-- [ ] 2.4 Update API route handlers and error mapping in `src/infrastructure/http/api-handler.ts` and `src/app/api/approvals/[id]/approve/route.ts` to handle multi-approval workflow and return reason codes `SAME_APPROVER` and `SECOND_APPROVER_NOT_DIRECTOR`; verify integration tests with `npm test`.
+- [x] 2.1 Extend `Invoice` model in `src/domain/invoice.ts` to include `approvals: Array<{ userId: string; role: Role; approvedAt: string }>` while preserving backward compatibility; verify type checks with `npx tsc --noEmit`.
+- [x] 2.2 Implement test suite in `tests/unit/approval-limits-step2.test.ts` covering invoices over 500,000: boundary 500,001, first approval holding status in pending, second approval by Director completing approval, negative rule for duplicate user (`SAME_APPROVER`), and negative rule for non-director second approver (`SECOND_APPROVER_NOT_DIRECTOR`); verify tests fail prior to implementation.
+- [x] 2.3 Implement dual-approval logic in `src/domain/approval-service.ts` comparing approver IDs via `user.id === priorApproval.userId` and verifying Director role for the second approval; verify all domain tests pass with `npm test`.
+- [x] 2.4 Update API route handlers and error mapping in `src/infrastructure/http/api-handler.ts` and `src/app/api/approvals/[id]/approve/route.ts` to handle multi-approval workflow and return reason codes `SAME_APPROVER` and `SECOND_APPROVER_NOT_DIRECTOR`; verify integration tests with `npm test`.
 - [ ] 2.5 Run Stryker mutation testing with `npm run mutate` to assess mutant kill rate and survivor profile for boundaries and negative rules, recording output in `docs/mutation/before.txt`.
 
 ## Workflow follow-up

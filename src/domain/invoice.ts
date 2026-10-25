@@ -1,4 +1,18 @@
-export type InvoiceStatus = 'Draft' | 'PendingApproval' | 'Approved' | 'Rejected';
+export type InvoiceStatus =
+  | 'Draft'
+  | 'PendingApproval'
+  | 'PartiallyApproved'
+  | 'Approved'
+  | 'Rejected';
+
+export type Role = 'Approver' | 'Admin' | 'Manager' | 'Director' | string;
+
+export interface InvoiceApproval {
+  userId: string;
+  role: Role;
+  timestamp: string;
+  approvedAt?: string;
+}
 
 export interface Invoice {
   id: string;
@@ -9,4 +23,6 @@ export interface Invoice {
   decidedBy?: string | null;
   decidedAt?: string | null;
   decisionNote?: string | null;
+  approvals?: InvoiceApproval[];
 }
+

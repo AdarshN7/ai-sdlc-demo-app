@@ -1,4 +1,4 @@
-import { Invoice } from './invoice';
+import { Invoice, InvoiceApproval, Role } from './invoice';
 
 export const MANAGER_APPROVAL_LIMIT = 50_000;
 export const DIRECTOR_APPROVAL_LIMIT = 500_000;
@@ -21,14 +21,14 @@ export type ApprovalResult =
   | { ok: false; reason: ApprovalRejectionReason; message: string };
 
 /**
- * Pure evaluation function enforcing role-based approval limits.
+ * Pure evaluation function enforcing role-based approval limits and high-value two-approver rules.
  * Validates preconditions without modifying the input invoice.
  */
 export function evaluateApproval(
   invoice: Invoice,
   approver: ApproverIdentity
 ): ApprovalResult {
-  if (invoice.status !== 'PendingApproval') {
+  if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {
     return {
       ok: false,
       reason: 'INVOICE_NOT_PENDING',
@@ -37,8 +37,84 @@ export function evaluateApproval(
   }
 
   const role = approver.role;
+  const approverId = approver.id || approver.username || 'unknown';
   const approverName = approver.username || approver.id || 'unknown';
+  const now = new Date().toISOString();
 
+  const newApproval: InvoiceApproval = {
+    userId: approverId,
+    role: role as Role,
+    timestamp: now,
+    approvedAt: now,
+  };
+
+  const priorApprovals = invoice.approvals ?? [];
+
+  // High-value dual-approval rule (> 500,000)
+  if (invoice.amount > DIRECTOR_APPROVAL_LIMIT) {
+    if (priorApprovals.length === 0) {
+      // First approval: Manager, Director, or Admin permitted
+      if (role !== 'Manager' && role !== 'Director' && role !== 'Admin') {
+        return {
+          ok: false,
+          reason: 'ROLE_NOT_ALLOWED',
+          message: `Role ${role} is not permitted to approve invoices.`,
+        };
+      }
+
+      const updatedInvoice: Invoice = {
+        ...invoice,
+        status: 'PartiallyApproved',
+        approvals: [newApproval],
+      };
+
+      return {
+        ok: true,
+        invoice: updatedInvoice,
+      };
+    } else {
+      // Second approval
+      // Negative rule 1: Same user approving twice rejected with SAME_APPROVER
+      // Compare unique userId (user.id === priorApproval.userId)
+      const isSameApprover = priorApprovals.some(
+        (a) =>
+          a.userId === approverId ||
+          (approver.id && a.userId === approver.id) ||
+          (approver.username && a.userId === approver.username)
+      );
+      if (isSameApprover) {
+        return {
+          ok: false,
+          reason: 'SAME_APPROVER',
+          message: 'The same user cannot approve an invoice twice.',
+        };
+      }
+
+      // Negative rule 2: Second approver must be Director (or Admin)
+      if (role !== 'Director' && role !== 'Admin') {
+        return {
+          ok: false,
+          reason: 'SECOND_APPROVER_NOT_DIRECTOR',
+          message: 'Second approval requires a Director.',
+        };
+      }
+
+      const updatedInvoice: Invoice = {
+        ...invoice,
+        status: 'Approved',
+        decidedBy: approverName,
+        decidedAt: now,
+        approvals: [...priorApprovals, newApproval],
+      };
+
+      return {
+        ok: true,
+        invoice: updatedInvoice,
+      };
+    }
+  }
+
+  // Single-approver rules (amount <= 500,000)
   if (role === 'Manager' || role === 'Approver') {
     if (invoice.amount > MANAGER_APPROVAL_LIMIT) {
       return {
@@ -48,13 +124,7 @@ export function evaluateApproval(
       };
     }
   } else if (role === 'Director' || role === 'Admin') {
-    if (invoice.amount > DIRECTOR_APPROVAL_LIMIT) {
-      return {
-        ok: false,
-        reason: 'LIMIT_EXCEEDED',
-        message: `Invoice amount ${invoice.amount} exceeds Director single-approver limit of ${DIRECTOR_APPROVAL_LIMIT}.`,
-      };
-    }
+    // Within Director limit (<= 500,000)
   } else {
     return {
       ok: false,
@@ -68,7 +138,8 @@ export function evaluateApproval(
     ...invoice,
     status: 'Approved',
     decidedBy: approverName,
-    decidedAt: new Date().toISOString(),
+    decidedAt: now,
+    approvals: [...priorApprovals, newApproval],
   };
 
   return {
@@ -76,3 +147,4 @@ export function evaluateApproval(
     invoice: updatedInvoice,
   };
 }
+

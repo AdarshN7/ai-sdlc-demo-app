@@ -761,6 +761,11 @@ tbody tr:hover {
   color: var(--pink-pill-text);
 }
 
+.status-PartiallyApproved {
+  background: #FFF4E5;
+  color: #B25E00;
+}
+
 .status-Approved {
   background: var(--green-pill);
   color: var(--green-pill-text);

@@ -83,7 +83,7 @@ export class ApprovalService {
   }
 
   private ensurePending(invoice: Invoice): void {
-    if (invoice.status !== 'PendingApproval') {
+    if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') {
       throw new ConflictError(
         `Invoice ${invoice.id} is ${invoice.status}; only pending invoices can be decided.`
       );
