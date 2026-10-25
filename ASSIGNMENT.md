@@ -215,15 +215,3 @@ The complete user workflow is verified end-to-end via Playwright in [e2e/tests/a
 All 7 Playwright E2E tests pass cleanly (`npm run test:e2e`).
 
 ---
-
-## 9. Demo Video Script & Walkthrough
-
-A comprehensive, production-ready video narration and screen recording script is located in [FRS-Roadmap-implementation-plan/demo-video-script.md](file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/FRS-Roadmap-implementation-plan/demo-video-script.md).
-
-### Video Timeline Overview (Target: 9:00 Minutes)
-- **0:00 – 1:30**: Introduction, Architecture, `AGENTS.md`, and the Continuous Interaction Logger.
-- **1:30 – 2:30**: OpenSpec Specification, Gherkin Scenarios, and Boundary Analysis.
-- **2:30 – 5:00**: Live Unit Tests (`npm test`), Testing the 2 Negative Rules, and Live Invariant Break Demo.
-- **5:00 – 7:00**: Stryker Mutation Testing Analysis (Comparing 82.04% Before to 100.00% After).
-- **7:00 – 8:30**: Headed Playwright E2E Test Execution (`npm run test:e2e`).
-- **8:30 – 9:30**: Pull Request Review Findings Triage Table and Conclusion.
