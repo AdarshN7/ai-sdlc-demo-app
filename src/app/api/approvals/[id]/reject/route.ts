@@ -1,0 +1,25 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getInvoiceRepository } from '@/infrastructure/in-memory-invoice-repository';
+import { ApprovalService } from '@/domain/approval-service';
+import { requireAuth } from '@/infrastructure/auth/auth-guard';
+import { handleApiError } from '@/infrastructure/http/api-handler';
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = requireAuth(request, ['Approver', 'Admin']);
+
+    const body = await request.json().catch(() => ({}));
+    const reason = body?.reason;
+
+    const repository = getInvoiceRepository();
+    const service = new ApprovalService(repository);
+    const updated = await service.reject(params.id, session.username, reason);
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

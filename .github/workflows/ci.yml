@@ -11,8 +11,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+
+      - uses: actions/setup-node@v4
         with:
-          dotnet-version: '8.0.x'
-      - run: dotnet build backend/InvoiceApp.sln --configuration Release
-      - run: dotnet test backend/InvoiceApp.sln --configuration Release --no-build
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Run unit and integration tests
+        run: npm test
+
+      - name: Build Next.js application
+        run: npm run build
+
+      - name: Install e2e dependencies
+        run: |
+          cd e2e
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E tests
+        run: npm run test:e2e

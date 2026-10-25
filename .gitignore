@@ -1,10 +1,11 @@
-bin/
-obj/
-*.db
-*.user
-.vs/
 .idea/
 node_modules/
+.next/
 .env
 test-results/
 playwright-report/
+
+# AI interaction logging — temporary files only
+.ai-sdlc/.seen-events/
+.ai-sdlc/.lock/
+# NOTE: .ai-sdlc/interaction-log.jsonl is NOT gitignored — it is the required AI interaction log.

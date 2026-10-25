@@ -1,0 +1,219 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
+import { POST as loginRoute } from '@/app/api/auth/login/route';
+import { POST as logoutRoute } from '@/app/api/auth/logout/route';
+import { GET as getInvoicesRoute, POST as createInvoiceRoute } from '@/app/api/invoices/route';
+import { GET as getInvoiceByIdRoute, DELETE as deleteInvoiceRoute } from '@/app/api/invoices/[id]/route';
+import { POST as submitInvoiceRoute } from '@/app/api/invoices/[id]/submit/route';
+import { POST as approveRoute } from '@/app/api/approvals/[id]/approve/route';
+import { POST as rejectRoute } from '@/app/api/approvals/[id]/reject/route';
+import { getSessionStore } from '@/infrastructure/auth/session-store';
+import { getInvoiceRepository } from '@/infrastructure/in-memory-invoice-repository';
+
+describe('API Route Handlers Integration', () => {
+  let approverToken: string;
+  let adminToken: string;
+
+  beforeEach(async () => {
+    // Reset session store and repo for clean test state
+    globalThis.__sessionStore = undefined;
+    globalThis.__invoiceRepository = undefined;
+
+    const sessionStore = getSessionStore();
+    approverToken = sessionStore.create({ username: 'demo.approver', role: 'Approver' });
+    adminToken = sessionStore.create({ username: 'demo.admin', role: 'Admin' });
+  });
+
+  const createRequest = (url: string, method: string, options: { token?: string; body?: any } = {}) => {
+    const headers = new Headers();
+    if (options.token) {
+      headers.set('Authorization', `Bearer ${options.token}`);
+    }
+    if (options.body) {
+      headers.set('Content-Type', 'application/json');
+    }
+    return new NextRequest(new URL(url, 'http://localhost:5000'), {
+      method,
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+  };
+
+  describe('Auth Routes', () => {
+    it('login returns 200 with token and role for valid credentials', async () => {
+      const req = createRequest('/api/auth/login', 'POST', {
+        body: { username: 'demo.approver', password: 'ChangeMe123!' },
+      });
+      const res = await loginRoute(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.token).toBeDefined();
+      expect(data.username).toBe('demo.approver');
+      expect(data.role).toBe('Approver');
+    });
+
+    it('login returns 401 for invalid credentials', async () => {
+      const req = createRequest('/api/auth/login', 'POST', {
+        body: { username: 'demo.approver', password: 'wrong' },
+      });
+      const res = await loginRoute(req);
+      expect(res.status).toBe(401);
+      const data = await res.json();
+      expect(data.error).toBe('Invalid username or password.');
+    });
+
+    it('logout returns 204 and clears session', async () => {
+      const req = createRequest('/api/auth/logout', 'POST', { token: approverToken });
+      const res = await logoutRoute(req);
+      expect(res.status).toBe(204);
+      expect(getSessionStore().get(approverToken)).toBeNull();
+    });
+  });
+
+  describe('Invoices Routes', () => {
+    it('GET /api/invoices requires authentication', async () => {
+      const req = createRequest('/api/invoices', 'GET');
+      const res = await getInvoicesRoute(req);
+      expect(res.status).toBe(401);
+    });
+
+    it('GET /api/invoices returns all seed invoices for authenticated user', async () => {
+      const req = createRequest('/api/invoices', 'GET', { token: approverToken });
+      const res = await getInvoicesRoute(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.length).toBe(5);
+    });
+
+    it('GET /api/invoices filters by status', async () => {
+      const req = createRequest('/api/invoices?status=Draft', 'GET', { token: approverToken });
+      const res = await getInvoicesRoute(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.every((i: any) => i.status === 'Draft')).toBe(true);
+    });
+
+    it('GET /api/invoices returns 400 for unknown status', async () => {
+      const req = createRequest('/api/invoices?status=InvalidStatus', 'GET', { token: approverToken });
+      const res = await getInvoicesRoute(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toBe("Unknown status 'InvalidStatus'.");
+    });
+
+    it('POST /api/invoices validates required customer name', async () => {
+      const req = createRequest('/api/invoices', 'POST', {
+        token: approverToken,
+        body: { customerName: '  ', amount: 500 },
+      });
+      const res = await createInvoiceRoute(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toBe('Customer name is required.');
+    });
+
+    it('POST /api/invoices validates amount > 0', async () => {
+      const req = createRequest('/api/invoices', 'POST', {
+        token: approverToken,
+        body: { customerName: 'New School', amount: 0 },
+      });
+      const res = await createInvoiceRoute(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toBe('Amount must be greater than zero.');
+    });
+
+    it('POST /api/invoices creates a new draft invoice', async () => {
+      const req = createRequest('/api/invoices', 'POST', {
+        token: approverToken,
+        body: { customerName: 'New Academy', amount: 750.25 },
+      });
+      const res = await createInvoiceRoute(req);
+      expect(res.status).toBe(201);
+      const data = await res.json();
+      expect(data.id).toBe('INV-1006');
+      expect(data.status).toBe('Draft');
+      expect(data.customerName).toBe('New Academy');
+      expect(data.amount).toBe(750.25);
+      expect(res.headers.get('Location')).toBe('/api/invoices/INV-1006');
+    });
+
+    it('GET /api/invoices/[id] returns invoice if found or 404', async () => {
+      const reqFound = createRequest('/api/invoices/INV-1001', 'GET', { token: approverToken });
+      const resFound = await getInvoiceByIdRoute(reqFound, { params: { id: 'INV-1001' } });
+      expect(resFound.status).toBe(200);
+
+      const reqNotFound = createRequest('/api/invoices/INV-9999', 'GET', { token: approverToken });
+      const resNotFound = await getInvoiceByIdRoute(reqNotFound, { params: { id: 'INV-9999' } });
+      expect(resNotFound.status).toBe(404);
+    });
+
+    it('DELETE /api/invoices/[id] returns 403 for non-Admin', async () => {
+      const req = createRequest('/api/invoices/INV-1005', 'DELETE', { token: approverToken });
+      const res = await deleteInvoiceRoute(req, { params: { id: 'INV-1005' } });
+      expect(res.status).toBe(403);
+    });
+
+    it('DELETE /api/invoices/[id] returns 204 for Admin', async () => {
+      const req = createRequest('/api/invoices/INV-1005', 'DELETE', { token: adminToken });
+      const res = await deleteInvoiceRoute(req, { params: { id: 'INV-1005' } });
+      expect(res.status).toBe(204);
+
+      const getReq = createRequest('/api/invoices/INV-1005', 'GET', { token: adminToken });
+      const getRes = await getInvoiceByIdRoute(getReq, { params: { id: 'INV-1005' } });
+      expect(getRes.status).toBe(404);
+    });
+  });
+
+  describe('Approvals Routes', () => {
+    it('POST /api/invoices/[id]/submit moves draft to PendingApproval', async () => {
+      const req = createRequest('/api/invoices/INV-1005/submit', 'POST', { token: approverToken });
+      const res = await submitInvoiceRoute(req, { params: { id: 'INV-1005' } });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.status).toBe('PendingApproval');
+    });
+
+    it('POST /api/invoices/[id]/submit returns 409 if invoice is not Draft', async () => {
+      const req = createRequest('/api/invoices/INV-1001/submit', 'POST', { token: approverToken });
+      const res = await submitInvoiceRoute(req, { params: { id: 'INV-1001' } });
+      expect(res.status).toBe(409);
+      const data = await res.json();
+      expect(data.error).toContain('only drafts can be submitted');
+    });
+
+    it('POST /api/approvals/[id]/approve approves pending invoice', async () => {
+      const req = createRequest('/api/approvals/INV-1001/approve', 'POST', { token: approverToken });
+      const res = await approveRoute(req, { params: { id: 'INV-1001' } });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.status).toBe('Approved');
+      expect(data.decidedBy).toBe('demo.approver');
+      expect(data.decidedAt).toBeDefined();
+    });
+
+    it('POST /api/approvals/[id]/reject requires non-empty reason', async () => {
+      const req = createRequest('/api/approvals/INV-1002/reject', 'POST', {
+        token: approverToken,
+        body: { reason: '   ' },
+      });
+      const res = await rejectRoute(req, { params: { id: 'INV-1002' } });
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toBe('A reason is required to reject an invoice.');
+    });
+
+    it('POST /api/approvals/[id]/reject rejects pending invoice with reason', async () => {
+      const req = createRequest('/api/approvals/INV-1002/reject', 'POST', {
+        token: approverToken,
+        body: { reason: 'Price too high' },
+      });
+      const res = await rejectRoute(req, { params: { id: 'INV-1002' } });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.status).toBe('Rejected');
+      expect(data.decisionNote).toBe('Price too high');
+      expect(data.decidedBy).toBe('demo.approver');
+    });
+  });
+});
