@@ -54,7 +54,12 @@ export default function Home() {
       }
       const body = response.status === 204 ? null : await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error((body && body.error) || `Request failed (${response.status})`);
+        const errorMsg = body?.reason
+          ? `${body.reason}: ${body.error || body.message}`
+          : (body?.error || `Request failed (${response.status})`);
+        const err = new Error(errorMsg);
+        (err as any).reason = body?.reason;
+        throw err;
       }
       return body;
     },
@@ -95,6 +100,26 @@ export default function Home() {
     sessionStorage.removeItem('session');
     setInvoices([]);
     setActiveTab('invoices');
+  };
+
+  const handleSwitchUser = async (targetUsername: string, targetPassword?: string) => {
+    try {
+      const pwd = targetPassword || DEMO_USERS.find(u => u.username === targetUsername)?.password || 'ChangeMe123!';
+      const result = await api('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ username: targetUsername, password: pwd }),
+      });
+      const newSession: StoredSession = {
+        token: result.token,
+        username: result.username,
+        role: result.role,
+      };
+      setSession(newSession);
+      sessionStorage.setItem('session', JSON.stringify(newSession));
+      setDecisionError('');
+    } catch (error: any) {
+      console.error('Failed to switch user:', error);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -218,6 +243,30 @@ export default function Home() {
 
             <form id="login-form" onSubmit={handleLogin}>
               <div className="form-field-group">
+                <label htmlFor="user-switcher">Quick user switcher</label>
+                <select
+                  id="user-switcher"
+                  aria-label="Select demo user"
+                  className="user-switcher-select"
+                  value={username}
+                  onChange={e => {
+                    const u = DEMO_USERS.find(user => user.username === e.target.value);
+                    if (u) {
+                      setUsername(u.username);
+                      setPassword(u.password);
+                      setLoginError('');
+                    }
+                  }}
+                >
+                  <option value="">-- Select demo user or role --</option>
+                  {DEMO_USERS.map(user => (
+                    <option key={user.username} value={user.username}>
+                      {DEMO_ACCOUNT_LABELS[user.username] || `${user.username} (${user.role})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-field-group">
                 <label htmlFor="username">Username</label>
                 <input
                   id="username"
@@ -323,6 +372,26 @@ export default function Home() {
                       {displayName.charAt(0)}
                     </div>
                     <span id="whoami">{`${session.username} (${session.role})`}</span>
+                  </div>
+                  <div className="user-switcher-container">
+                    <select
+                      id="user-switcher"
+                      aria-label="Switch user"
+                      className="user-switcher-select"
+                      value={session.username}
+                      onChange={async (e) => {
+                        const targetUser = DEMO_USERS.find(u => u.username === e.target.value);
+                        if (targetUser) {
+                          await handleSwitchUser(targetUser.username, targetUser.password);
+                        }
+                      }}
+                    >
+                      {DEMO_USERS.map((user) => (
+                        <option key={user.username} value={user.username}>
+                          {DEMO_ACCOUNT_LABELS[user.username] || `${user.username} (${user.role})`}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <button id="sign-out" type="button" onClick={signOut}>
                     Sign out
@@ -584,9 +653,16 @@ export default function Home() {
                   </ul>
                 )}
                 {decisionError && (
-                  <p id="decision-error" role="alert">
-                    {decisionError}
-                  </p>
+                  <div id="decision-error">
+                    <p
+                      id="approval-error"
+                      data-testid="approval-error"
+                      role="alert"
+                      className="approval-error"
+                    >
+                      {decisionError}
+                    </p>
+                  </div>
                 )}
               </section>
             </section>

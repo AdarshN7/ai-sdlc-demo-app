@@ -244,6 +244,29 @@ header.app-header {
   gap: 10px;
 }
 
+.user-switcher-container {
+  display: flex;
+  align-items: center;
+}
+
+.user-switcher-select {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  background: #FFFFFF;
+  color: var(--ink-primary);
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.user-switcher-select:hover,
+.user-switcher-select:focus {
+  border-color: var(--primary-blue);
+}
+
 .user-profile-badge {
   display: flex;
   align-items: center;
