@@ -11,7 +11,7 @@ export type ApprovalRejectionReason =
   | 'INVOICE_NOT_PENDING';
 
 export interface ApproverIdentity {
-  id?: string;
+  id: string;
   username?: string;
   role?: string;
 }
@@ -37,7 +37,7 @@ export function evaluateApproval(
   }
 
   const role = approver.role ?? 'Approver';
-  const approverId = approver.id || approver.username || 'unknown';
+  const approverId = approver.id;
   const approverName = approver.username || approver.id || 'unknown';
   const now = new Date().toISOString();
 

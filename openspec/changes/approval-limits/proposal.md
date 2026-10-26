@@ -11,7 +11,7 @@ Invoices currently lack role-based tiered authorization controls, allowing any a
   - **Director**: may approve invoices up to 500,000 inclusive.
 - Introduce dual-approval enforcement for high-value invoices:
   - Invoices greater than 500,000 require two distinct approvers.
-  - The second approver must hold the Director role.
+  - The second approver must hold the Director or Admin role.
   - The same user is strictly prohibited from approving the same invoice twice.
 - Implement atomic rejection and audit reasons:
   - Any failed approval attempt leaves invoice state strictly unmodified.
@@ -29,6 +29,6 @@ None (first formal OpenSpec specification in the repository).
 
 ## Impact
 
-- **Domain Model**: `Invoice` entity updated to support tracking multiple approvals (`approvals: Array<{ userId: string; role: Role }>`), updated statuses (`Draft`, `PendingApproval`, `Approved`, `Rejected`), and pure domain validation functions.
+- **Domain Model**: `Invoice` entity updated to support tracking multiple approvals (`approvals: Array<{ userId: string; role: Role }>`), updated statuses (`Draft`, `PendingApproval`, `PartiallyApproved`, `Approved`, `Rejected`), and pure domain validation functions.
 - **Service Layer**: `ApprovalService` enforces validation prior to any state mutation, returning structured results (`{ ok: true, invoice }` or `{ ok: false, reason, message }`).
 - **API & UI**: Approval endpoints and UI views reflect tiered approval rules, dual-approval pending states, and surfaced rejection reason messages.

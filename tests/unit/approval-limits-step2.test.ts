@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { Invoice } from '@/domain/invoice';
 import { evaluateApproval } from '@/domain/approval-limits';
 import { ApprovalService } from '@/domain/approval-service';
-import { ApprovalRejectedError } from '@/domain/errors';
 import { FakeInvoiceRepository } from '../fakes/fake-invoice-repository';
 
 describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
@@ -57,6 +56,7 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
 
     it('1st approval by unauthorized role is rejected with ROLE_NOT_ALLOWED', () => {
       const invoice = createInvoice(600_000);
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
       const result = evaluateApproval(invoice, {
         id: 'user-app-1',
         role: 'Approver',
@@ -67,6 +67,7 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
         expect(result.reason).toBe('ROLE_NOT_ALLOWED');
         expect(result.message).toBe('Role Approver is not permitted to approve invoices.');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
 
     it('1st approval by Admin leaves invoice partially approved', () => {
@@ -209,6 +210,7 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
           },
         ],
       };
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
 
       // Even if display name/username looks different or role is Director, matching user ID is rejected
       const sameUserResult = evaluateApproval(invoice, {
@@ -221,6 +223,7 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
       if (!sameUserResult.ok) {
         expect(sameUserResult.reason).toBe('SAME_APPROVER');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
 
     it('rejects with SAME_APPROVER when prior approvals list has multiple entries and first approver re-approves', () => {
@@ -240,6 +243,7 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
           },
         ],
       };
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
 
       const result = evaluateApproval(invoice, {
         id: 'user-first',
@@ -250,30 +254,35 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
       if (!result.ok) {
         expect(result.reason).toBe('SAME_APPROVER');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
 
-    it('rejects with SAME_APPROVER when user is identified by username fallback', () => {
+    it('allows a distinct user ID even when the username matches the first approver', () => {
       const invoice: Invoice = {
         ...createInvoice(600_000),
         status: 'PartiallyApproved',
         approvals: [
           {
-            userId: 'demo.director',
+            userId: 'director-user-1',
             role: 'Director',
             timestamp: '2026-01-01T10:00:00.000Z',
           },
         ],
       };
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
 
       const result = evaluateApproval(invoice, {
+        id: 'director-user-2',
         username: 'demo.director',
         role: 'Director',
       });
 
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.reason).toBe('SAME_APPROVER');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.invoice.status).toBe('Approved');
+        expect(result.invoice.approvals?.[1].userId).toBe('director-user-2');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
   });
 
@@ -320,6 +329,7 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
       );
       expect(step1Invoice.status).toBe('PartiallyApproved');
       expect(step1Invoice.approvals).toHaveLength(1);
+      const partialSnapshot = JSON.parse(JSON.stringify(await repo.getById('INV-HIGH-VAL')));
 
       // Duplicate approval attempt by the same Manager
       await expect(
@@ -328,18 +338,8 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
           username: 'demo.manager',
           role: 'Manager',
         })
-      ).rejects.toThrow(ApprovalRejectedError);
-
-      try {
-        await service.approve('INV-HIGH-VAL', {
-          id: 'user-mgr-1',
-          username: 'demo.manager',
-          role: 'Manager',
-        });
-      } catch (err) {
-        expect(err).toBeInstanceOf(ApprovalRejectedError);
-        expect((err as ApprovalRejectedError).reason).toBe('SAME_APPROVER');
-      }
+      ).rejects.toMatchObject({ reason: 'SAME_APPROVER' });
+      expect(await repo.getById('INV-HIGH-VAL')).toEqual(partialSnapshot);
 
       // Second approval attempt by another Manager (fails with SECOND_APPROVER_NOT_DIRECTOR)
       await expect(
@@ -348,20 +348,8 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
           username: 'demo.manager2',
           role: 'Manager',
         })
-      ).rejects.toThrow(ApprovalRejectedError);
-
-      try {
-        await service.approve('INV-HIGH-VAL', {
-          id: 'user-mgr-2',
-          username: 'demo.manager2',
-          role: 'Manager',
-        });
-      } catch (err) {
-        expect(err).toBeInstanceOf(ApprovalRejectedError);
-        expect((err as ApprovalRejectedError).reason).toBe(
-          'SECOND_APPROVER_NOT_DIRECTOR'
-        );
-      }
+      ).rejects.toMatchObject({ reason: 'SECOND_APPROVER_NOT_DIRECTOR' });
+      expect(await repo.getById('INV-HIGH-VAL')).toEqual(partialSnapshot);
 
       // Valid 2nd approval by distinct Director
       const step2Invoice = await service.approve(

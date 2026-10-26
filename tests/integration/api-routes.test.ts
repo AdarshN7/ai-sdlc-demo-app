@@ -23,10 +23,10 @@ describe('API Route Handlers Integration', () => {
     globalThis.__invoiceRepository = undefined;
 
     const sessionStore = getSessionStore();
-    approverToken = sessionStore.create({ username: 'demo.approver', role: 'Approver' });
-    adminToken = sessionStore.create({ username: 'demo.admin', role: 'Admin' });
-    managerToken = sessionStore.create({ username: 'demo.manager', role: 'Manager' });
-    directorToken = sessionStore.create({ username: 'demo.director1', role: 'Director' });
+    approverToken = sessionStore.create({ userId: 'usr-approver', username: 'demo.approver', role: 'Approver' });
+    adminToken = sessionStore.create({ userId: 'usr-admin', username: 'demo.admin', role: 'Admin' });
+    managerToken = sessionStore.create({ userId: 'usr-manager', username: 'demo.manager', role: 'Manager' });
+    directorToken = sessionStore.create({ userId: 'usr-director-1', username: 'demo.director1', role: 'Director' });
   });
 
   const createRequest = (url: string, method: string, options: { token?: string; body?: any } = {}) => {
@@ -53,6 +53,7 @@ describe('API Route Handlers Integration', () => {
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.token).toBeDefined();
+      expect(data.userId).toBe('usr-approver');
       expect(data.username).toBe('demo.approver');
       expect(data.role).toBe('Approver');
     });
@@ -256,7 +257,9 @@ describe('API Route Handlers Integration', () => {
     it('POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices', async () => {
       const repo = getInvoiceRepository();
       const sessionStore = getSessionStore();
-      const director2Token = sessionStore.create({ username: 'demo.director2', role: 'Director' });
+      const director2Token = sessionStore.create({
+        userId: 'usr-director-2', username: 'demo.director2', role: 'Director',
+      });
 
       const beforeInvoice = await repo.getById('INV-1003');
       expect(beforeInvoice?.amount).toBe(600000);
@@ -268,6 +271,10 @@ describe('API Route Handlers Integration', () => {
       const data1 = await res1.json();
       expect(data1.status).toBe('PartiallyApproved');
       expect(data1.approvals).toHaveLength(1);
+      expect(data1.approvals[0].userId).toBe('usr-director-1');
+      const partiallyApprovedSnapshot = JSON.parse(
+        JSON.stringify(await repo.getById('INV-1003'))
+      );
 
       // Duplicate approval attempt by same Director returns 422 SAME_APPROVER
       const dupReq = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: directorToken });
@@ -275,6 +282,7 @@ describe('API Route Handlers Integration', () => {
       expect(dupRes.status).toBe(422);
       const dupData = await dupRes.json();
       expect(dupData.reason).toBe('SAME_APPROVER');
+      expect(await repo.getById('INV-1003')).toEqual(partiallyApprovedSnapshot);
 
       // 2nd approver as Manager returns 422 SECOND_APPROVER_NOT_DIRECTOR
       const mgrReq = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: managerToken });
@@ -282,6 +290,7 @@ describe('API Route Handlers Integration', () => {
       expect(mgrRes.status).toBe(422);
       const mgrData = await mgrRes.json();
       expect(mgrData.reason).toBe('SECOND_APPROVER_NOT_DIRECTOR');
+      expect(await repo.getById('INV-1003')).toEqual(partiallyApprovedSnapshot);
 
       // 2nd approval by distinct Director returns 200 and transitions to Approved
       const req2 = createRequest('/api/approvals/INV-1003/approve', 'POST', { token: director2Token });
@@ -290,6 +299,9 @@ describe('API Route Handlers Integration', () => {
       const data2 = await res2.json();
       expect(data2.status).toBe('Approved');
       expect(data2.approvals).toHaveLength(2);
+      expect(data2.approvals.map((approval: { userId: string }) => approval.userId)).toEqual([
+        'usr-director-1', 'usr-director-2',
+      ]);
     });
 
     it('POST /api/approvals/[id]/reject requires non-empty reason', async () => {

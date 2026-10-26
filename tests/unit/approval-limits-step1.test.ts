@@ -6,7 +6,6 @@ import {
   evaluateApproval,
 } from '@/domain/approval-limits';
 import { ApprovalService } from '@/domain/approval-service';
-import { ApprovalRejectedError } from '@/domain/errors';
 import { FakeInvoiceRepository } from '../fakes/fake-invoice-repository';
 
 describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
@@ -77,6 +76,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
 
     it('Manager rejected for 50,001 (exceeds limit by 1)', () => {
       const invoice = createInvoice(50_001);
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
       const result = evaluateApproval(invoice, { id: 'mgr-1', role: 'Manager' });
 
       expect(result.ok).toBe(false);
@@ -84,6 +84,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
         expect(result.reason).toBe('LIMIT_EXCEEDED');
         expect(result.message).toBe('Invoice amount 50001 exceeds Manager approval limit of 50000.');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
 
     it('Director approves 50,001 (within Director limit)', () => {
@@ -100,6 +101,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
 
     it('Manager rejected for 499,999', () => {
       const invoice = createInvoice(499_999);
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
       const result = evaluateApproval(invoice, { id: 'mgr-1', role: 'Manager' });
 
       expect(result.ok).toBe(false);
@@ -107,6 +109,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
         expect(result.reason).toBe('LIMIT_EXCEEDED');
         expect(result.message).toBe('Invoice amount 499999 exceeds Manager approval limit of 50000.');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
 
     it('Director approves 499,999', () => {
@@ -123,6 +126,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
 
     it('Manager rejected for 500,000', () => {
       const invoice = createInvoice(500_000);
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
       const result = evaluateApproval(invoice, { id: 'mgr-1', role: 'Manager' });
 
       expect(result.ok).toBe(false);
@@ -130,6 +134,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
         expect(result.reason).toBe('LIMIT_EXCEEDED');
         expect(result.message).toBe('Invoice amount 500000 exceeds Manager approval limit of 50000.');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
 
     it('Director approves 500,000 (exact inclusive limit)', () => {
@@ -165,6 +170,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
 
     it('Rejects non-pending invoice with INVOICE_NOT_PENDING and descriptive message', () => {
       const invoice: Invoice = { ...createInvoice(100), status: 'Draft' };
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
       const result = evaluateApproval(invoice, { id: 'mgr-1', role: 'Manager' });
 
       expect(result.ok).toBe(false);
@@ -172,10 +178,12 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
         expect(result.reason).toBe('INVOICE_NOT_PENDING');
         expect(result.message).toBe('Invoice INV-TEST is Draft; only pending invoices can be approved.');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
 
     it('Rejects single approval when user has unauthorized role', () => {
       const invoice = createInvoice(25_000);
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
       const result = evaluateApproval(invoice, { id: 'viewer-1', role: 'Viewer' });
 
       expect(result.ok).toBe(false);
@@ -183,6 +191,7 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
         expect(result.reason).toBe('ROLE_NOT_ALLOWED');
         expect(result.message).toBe('Role Viewer is not permitted to approve invoices.');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
 
     it('Allows Admin to approve invoice <= 500,000', () => {
@@ -196,15 +205,15 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       }
     });
 
-    it('Defaults unknown approver id/name and Approver role when approver identity is blank', () => {
+    it('Uses stable approver ID when username is omitted and defaults the role', () => {
       const invoice = createInvoice(10_000);
-      const result = evaluateApproval(invoice, {});
+      const result = evaluateApproval(invoice, { id: 'user-1' });
 
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.invoice.status).toBe('Approved');
-        expect(result.invoice.decidedBy).toBe('unknown');
-        expect(result.invoice.approvals?.[0].userId).toBe('unknown');
+        expect(result.invoice.decidedBy).toBe('user-1');
+        expect(result.invoice.approvals?.[0].userId).toBe('user-1');
         expect(result.invoice.approvals?.[0].role).toBe('Approver');
       }
     });
@@ -246,15 +255,8 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       const service = new ApprovalService(repo);
 
       await expect(
-        service.approve('INV-1002', 'demo.manager', 'Manager')
-      ).rejects.toThrow(ApprovalRejectedError);
-
-      try {
-        await service.approve('INV-1002', 'demo.manager', 'Manager');
-      } catch (err) {
-        expect(err).toBeInstanceOf(ApprovalRejectedError);
-        expect((err as ApprovalRejectedError).reason).toBe('LIMIT_EXCEEDED');
-      }
+        service.approve('INV-1002', { id: 'usr-manager', username: 'demo.manager', role: 'Manager' })
+      ).rejects.toMatchObject({ reason: 'LIMIT_EXCEEDED' });
 
       // Repository invoice must remain completely unchanged
       const stored = await repo.getById('INV-1002');
@@ -266,7 +268,9 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       const repo = new FakeInvoiceRepository(invoice);
       const service = new ApprovalService(repo);
 
-      const approved = await service.approve('INV-1001', 'demo.manager', 'Manager');
+      const approved = await service.approve('INV-1001', {
+        id: 'usr-manager', username: 'demo.manager', role: 'Manager',
+      });
       expect(approved.status).toBe('Approved');
       expect(approved.decidedBy).toBe('demo.manager');
 
@@ -279,7 +283,9 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       const repo = new FakeInvoiceRepository(invoice);
       const service = new ApprovalService(repo);
 
-      const approved = await service.approve('INV-1002', 'demo.director', 'Director');
+      const approved = await service.approve('INV-1002', {
+        id: 'usr-director', username: 'demo.director', role: 'Director',
+      });
       expect(approved.status).toBe('Approved');
       expect(approved.decidedBy).toBe('demo.director');
 
@@ -292,19 +298,17 @@ describe('Phase 4: Step 1 - Single-Approver Role Limits', () => {
       const repo = new FakeInvoiceRepository(invoice);
       const service = new ApprovalService(repo);
 
-      await service.approve('INV-1003', 'demo.director', 'Director');
+      await service.approve('INV-1003', {
+        id: 'usr-director', username: 'demo.director', role: 'Director',
+      });
       const partialStored = await repo.getById('INV-1003');
       const partialSnapshot = JSON.parse(JSON.stringify(partialStored));
 
       await expect(
-        service.approve('INV-1003', 'demo.director', 'Director')
-      ).rejects.toThrow(ApprovalRejectedError);
-
-      try {
-        await service.approve('INV-1003', 'demo.director', 'Director');
-      } catch (err) {
-        expect((err as ApprovalRejectedError).reason).toBe('SAME_APPROVER');
-      }
+        service.approve('INV-1003', {
+          id: 'usr-director', username: 'demo.director', role: 'Director',
+        })
+      ).rejects.toMatchObject({ reason: 'SAME_APPROVER' });
 
       // Repository invoice must remain completely unchanged
       const stored = await repo.getById('INV-1003');

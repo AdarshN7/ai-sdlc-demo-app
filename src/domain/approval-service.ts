@@ -9,8 +9,8 @@ import {
 import { ApproverIdentity, evaluateApproval } from './approval-limits';
 
 /**
- * Moves an invoice through its lifecycle: Draft -> PendingApproval -> Approved or Rejected.
- * One invoice at a time, decided as a whole by a single approver.
+ * Moves invoices through draft, pending, partial approval, approval, and rejection states.
+ * High-value invoices require distinct approvals before final approval.
  */
 export class ApprovalService {
   constructor(private readonly repository: IInvoiceRepository) {}
@@ -31,19 +31,15 @@ export class ApprovalService {
 
   async approve(
     invoiceId: string,
-    approver: string | ApproverIdentity,
-    role?: string
+    approver: ApproverIdentity
   ): Promise<Invoice> {
     const invoice = await this.find(invoiceId);
 
-    const identity: ApproverIdentity =
-      typeof approver === 'string'
-        ? { username: approver, id: approver, role: role ?? 'Approver' }
-        : {
-            username: approver.username || approver.id,
-            id: approver.id || approver.username,
-            role: approver.role ?? role ?? 'Approver',
-          };
+    const identity: ApproverIdentity = {
+      ...approver,
+      username: approver.username || approver.id,
+      role: approver.role ?? 'Approver',
+    };
 
     const result = evaluateApproval(invoice, identity);
     if (!result.ok) {

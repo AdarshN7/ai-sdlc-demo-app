@@ -13,8 +13,11 @@ describe('ApprovalService', () => {
     createdAt: new Date().toISOString(),
   });
 
+  const repositoryFor = (...invoices: Invoice[]) =>
+    new FakeInvoiceRepository(...invoices);
+
   const serviceFor = (...invoices: Invoice[]) =>
-    new ApprovalService(new FakeInvoiceRepository(...invoices));
+    new ApprovalService(repositoryFor(...invoices));
 
   it('Submit_MovesDraftToPendingApproval', async () => {
     const invoice = invoiceWith('INV-1', 'Draft');
@@ -24,14 +27,21 @@ describe('ApprovalService', () => {
   });
 
   it('Submit_RejectsInvoiceThatIsNotADraft', async () => {
-    const service = serviceFor(invoiceWith('INV-1', 'Approved'));
+    const invoice = invoiceWith('INV-1', 'Approved');
+    const repo = repositoryFor(invoice);
+    const snapshot = JSON.parse(JSON.stringify(await repo.getById('INV-1')));
+    const service = new ApprovalService(repo);
 
     await expect(service.submit('INV-1')).rejects.toThrow(ConflictError);
+    expect(await repo.getById('INV-1')).toEqual(snapshot);
   });
 
   it('Approve_SetsStatusApproverAndTimestamp', async () => {
     const service = serviceFor(invoiceWith('INV-1', 'PendingApproval'));
-    const result = await service.approve('INV-1', 'demo.approver');
+    const result = await service.approve('INV-1', {
+      id: 'usr-approver',
+      username: 'demo.approver',
+    });
 
     expect(result.status).toBe('Approved');
     expect(result.decidedBy).toBe('demo.approver');
@@ -39,41 +49,61 @@ describe('ApprovalService', () => {
   });
 
   it('Approve_RejectsInvoiceThatIsStillADraft', async () => {
-    const service = serviceFor(invoiceWith('INV-1', 'Draft'));
+    const invoice = invoiceWith('INV-1', 'Draft');
+    const repo = repositoryFor(invoice);
+    const snapshot = JSON.parse(JSON.stringify(await repo.getById('INV-1')));
+    const service = new ApprovalService(repo);
 
-    await expect(service.approve('INV-1', 'demo.approver')).rejects.toThrow(ConflictError);
+    await expect(
+      service.approve('INV-1', { id: 'usr-approver', username: 'demo.approver' })
+    ).rejects.toThrow(ConflictError);
+    expect(await repo.getById('INV-1')).toEqual(snapshot);
   });
 
   it('Approve_ThrowsWhenInvoiceDoesNotExist', async () => {
-    const service = serviceFor();
+    const repo = repositoryFor();
+    const service = new ApprovalService(repo);
 
-    await expect(service.approve('INV-404', 'demo.approver')).rejects.toThrow(
+    await expect(
+      service.approve('INV-404', { id: 'usr-approver', username: 'demo.approver' })
+    ).rejects.toThrow(
       'Invoice INV-404 was not found.'
     );
+    expect(await repo.getAll()).toEqual([]);
   });
 
   it('Reject_ThrowsWhenInvoiceDoesNotExist', async () => {
-    const service = serviceFor();
+    const repo = repositoryFor();
+    const service = new ApprovalService(repo);
 
     await expect(
       service.reject('INV-404', 'demo.approver', 'Reason')
     ).rejects.toThrow('Invoice INV-404 was not found.');
+    expect(await repo.getAll()).toEqual([]);
   });
 
   it('Reject_RejectsInvoiceThatIsStillADraft', async () => {
-    const service = serviceFor(invoiceWith('INV-1', 'Draft'));
+    const invoice = invoiceWith('INV-1', 'Draft');
+    const repo = repositoryFor(invoice);
+    const snapshot = JSON.parse(JSON.stringify(await repo.getById('INV-1')));
+    const service = new ApprovalService(repo);
 
     await expect(
       service.reject('INV-1', 'demo.approver', 'Invalid draft')
     ).rejects.toThrow('Invoice INV-1 is Draft; only pending invoices can be decided.');
+    expect(await repo.getById('INV-1')).toEqual(snapshot);
   });
 
   it('Reject_RejectsInvoiceThatIsAlreadyApproved', async () => {
-    const service = serviceFor(invoiceWith('INV-1', 'Approved'));
+    const invoice = invoiceWith('INV-1', 'Approved');
+    const repo = repositoryFor(invoice);
+    const snapshot = JSON.parse(JSON.stringify(await repo.getById('INV-1')));
+    const service = new ApprovalService(repo);
 
     await expect(
       service.reject('INV-1', 'demo.approver', 'Cannot re-decide')
     ).rejects.toThrow('Invoice INV-1 is Approved; only pending invoices can be decided.');
+    expect(await repo.getById('INV-1')).toEqual(snapshot);
   });
 
   it('Reject_AllowsRejectingPartiallyApprovedInvoice', async () => {
@@ -96,9 +126,13 @@ describe('ApprovalService', () => {
   });
 
   it('Reject_RequiresAReason', async () => {
-    const service = serviceFor(invoiceWith('INV-1', 'PendingApproval'));
+    const invoice = invoiceWith('INV-1', 'PendingApproval');
+    const repo = repositoryFor(invoice);
+    const snapshot = JSON.parse(JSON.stringify(await repo.getById('INV-1')));
+    const service = new ApprovalService(repo);
 
     await expect(service.reject('INV-1', 'demo.approver', '  ')).rejects.toThrow(ValidationError);
+    expect(await repo.getById('INV-1')).toEqual(snapshot);
   });
 
   it('Approve_SupportsApproverIdentityObjectWithExplicitId', async () => {
@@ -109,12 +143,16 @@ describe('ApprovalService', () => {
     expect(result.approvals?.[0].userId).toBe('user-id-only');
   });
 
-  it('Approve_SupportsApproverIdentityObjectWithExplicitUsernameOnly', async () => {
+  it('Approve_UsesStableIdWhenUsernameIsAlsoPresent', async () => {
     const service = serviceFor(invoiceWith('INV-1', 'PendingApproval'));
-    const result = await service.approve('INV-1', { username: 'uname-only', role: 'Manager' });
+    const result = await service.approve('INV-1', {
+      id: 'stable-user-id',
+      username: 'uname-only',
+      role: 'Manager',
+    });
 
     expect(result.status).toBe('Approved');
-    expect(result.approvals?.[0].userId).toBe('uname-only');
+    expect(result.approvals?.[0].userId).toBe('stable-user-id');
   });
 
   it('Approve_SupportsApproverWithBothIdAndUsernamePreservingIdAsUserId', async () => {
@@ -138,12 +176,12 @@ describe('ApprovalService', () => {
     expect(result.approvals?.[0].role).toBe('Approver');
   });
 
-  it('Approve_DefaultsUsernameToUnknownWhenNeitherUsernameNorIdProvided', async () => {
+  it('Approve_UsesStableIdAsDisplayNameWhenUsernameIsMissing', async () => {
     const service = serviceFor(invoiceWith('INV-1', 'PendingApproval'));
-    const result = await service.approve('INV-1', { role: 'Manager' });
+    const result = await service.approve('INV-1', { id: 'stable-user-id', role: 'Manager' });
 
     expect(result.status).toBe('Approved');
-    expect(result.decidedBy).toBe('unknown');
-    expect(result.approvals?.[0].userId).toBe('unknown');
+    expect(result.decidedBy).toBe('stable-user-id');
+    expect(result.approvals?.[0].userId).toBe('stable-user-id');
   });
 });

@@ -19,10 +19,15 @@ export async function POST(request: Request) {
     }
 
     const sessionStore = getSessionStore();
-    const token = sessionStore.create({ username: user.username, role: user.role });
+    const token = sessionStore.create({
+      userId: user.userId,
+      username: user.username,
+      role: user.role,
+    });
 
     return NextResponse.json({
       token,
+      userId: user.userId,
       username: user.username,
       role: user.role,
     });
