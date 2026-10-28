@@ -1,5 +1,7 @@
 # AI in SDLC Assignment: Role-Based Invoice Approval Limits
 
+**Author:** Adarsh Nishad
+
 **Repository:** `AdarshN7/ai-sdlc-demo-app`
 
 **Feature:** Role based approval limits and two approvers for high value invoices
@@ -16,30 +18,30 @@ This assignment implements role based approval limits in the invoice approval se
 
 ## 2. Deliverables checklist
 
-| # | Deliverable | Where to find it | Status |
-|---:|---|---|---|
-| 1 | PR with at least three standalone implementation commits | [PR #8](https://github.com/AdarshN7/ai-sdlc-demo-app/pull/8); feature commits listed in §7 | Done |
-| 2 | Updated agent instructions | [`AGENTS.md`](AGENTS.md) | Done |
-| 3 | Specification artifacts | `openspec/changes/approval-limits/{proposal.md,design.md,specs/approval-limits/spec.md,tasks.md}` | Done |
-| 4 | Unit tests for all rules, including both negative rules | `tests/unit/approval-limits-step1.test.ts`, `tests/unit/approval-limits-step2.test.ts` | Done |
-| 5 | Playwright test for rejected over-limit approval | `e2e/tests/app.spec.ts` | Done |
-| 6 | Mutation scores before and after hardening | `docs/mutation/before.txt`, `docs/mutation/after.txt` | Done |
-| 7 | PR description with every review finding and verdict | `docs/pull-request-description.md` | Done (8 findings) |
-| 8 | AI interaction log | `.ai-sdlc/interaction-log.jsonl` | Done |
-| 9 | Assignment write-up | `ASSIGNMENT.md` | Done |
-| 10 | Demo video link | §13 | Pending external deliverable: record and upload an 8–10 minute video, then replace the placeholder URL |
+|   # | Deliverable                                              | Where to find it                                                                                  | Status                                                                                                 |
+| --: | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+|   1 | PR with at least three standalone implementation commits | [PR #8](https://github.com/AdarshN7/ai-sdlc-demo-app/pull/8); feature commits listed in §7        | Done                                                                                                   |
+|   2 | Updated agent instructions                               | [`AGENTS.md`](AGENTS.md)                                                                          | Done                                                                                                   |
+|   3 | Specification artifacts                                  | `openspec/changes/approval-limits/{proposal.md,design.md,specs/approval-limits/spec.md,tasks.md}` | Done                                                                                                   |
+|   4 | Unit tests for all rules, including both negative rules  | `tests/unit/approval-limits-step1.test.ts`, `tests/unit/approval-limits-step2.test.ts`            | Done                                                                                                   |
+|   5 | Playwright test for rejected over-limit approval         | `e2e/tests/app.spec.ts`                                                                           | Done                                                                                                   |
+|   6 | Mutation scores before and after hardening               | `docs/mutation/before.txt`, `docs/mutation/after.txt`                                             | Done                                                                                                   |
+|   7 | PR description with every review finding and verdict     | `docs/pull-request-description.md`                                                                | Done (8 findings)                                                                                      |
+|   8 | AI interaction log                                       | `.ai-sdlc/interaction-log.jsonl`                                                                  | Done                                                                                                   |
+|   9 | Assignment write-up                                      | `ASSIGNMENT.md`                                                                                   | Done                                                                                                   |
+|  10 | Demo video link                                          | §13                                                                                               | Pending external deliverable: record and upload an 8–10 minute video, then replace the placeholder URL |
 
 ## 3. Key decisions
 
-| Decision | Options considered | Choice | Why |
-|---|---|---|---|
-| Language and framework | Reference repo is .NET; brief permits another language | Next.js 14 App Router and TypeScript | Gives one TypeScript full stack, with API Route Handlers and a server enforced domain layer. |
-| Architecture | Rules in UI/routes or domain layer | Pure `src/domain`; repository interface; in-memory implementation on `globalThis`; Route Handlers; thin UI | Keeps business rules testable without React or HTTP and makes the server authoritative. |
-| Redux | Redux client state or server-side decisions | Considered and dropped | Redux is not required by the brief; client state can be bypassed, so approval enforcement belongs on the server. In-memory state resets on server restart. `POST /api/test/reset` supports test isolation and returns 404 in production unless `ALLOW_TEST_RESET=true`. |
-| Rejection handling | Mutate then roll back, or validate before persistence | Validate first and save only on success | A failed domain result becomes `ApprovalRejectedError`; repository update occurs only after successful evaluation, preserving state. |
-| Specification tool | OpenSpec or an alternative spec workflow | OpenSpec (`@fission-ai/openspec`) | OpenSpec setup and change commands are captured in `.ai-sdlc/interaction-log.jsonl`; see §6. Its spec-driven artifacts and workflows are checked in. |
-| AI tool | GitHub Copilot or another AI development environment | Google Antigravity, primarily using Gemini 3.8 Flash Medium according to the interaction log | Antigravity supplied the agent-based IDE workflow used in this project and was selected in the OpenSpec tool setup. The log also contains two Claude Opus 4 entries, so this documents the primary environment/model, not exclusive model use. Antigravity is not Copilot. The interaction log records a separate request to enable automatic Copilot PR review; its settings could not be enabled in that session because GitHub returned 404. No Copilot-only requirement appears in the assignment instructions provided here. |
-| Testing stack | .NET Stryker pin or JavaScript stack | Vitest, Playwright, StrykerJS | The current application is TypeScript; `.NET Stryker` settings do not apply. Stryker uses the Vitest runner and mutates `src/domain/**/*.ts`. |
+| Decision               | Options considered                                     | Choice                                                                                                     | Why                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language and framework | Reference repo is .NET; brief permits another language | Next.js 14 App Router and TypeScript                                                                       | Gives one TypeScript full stack, with API Route Handlers and a server enforced domain layer.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Architecture           | Rules in UI/routes or domain layer                     | Pure `src/domain`; repository interface; in-memory implementation on `globalThis`; Route Handlers; thin UI | Keeps business rules testable without React or HTTP and makes the server authoritative.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Redux                  | Redux client state or server-side decisions            | Considered and dropped                                                                                     | Redux is not required by the brief; client state can be bypassed, so approval enforcement belongs on the server. In-memory state resets on server restart. `POST /api/test/reset` supports test isolation and returns 404 in production unless `ALLOW_TEST_RESET=true`.                                                                                                                                                                                                                                                           |
+| Rejection handling     | Mutate then roll back, or validate before persistence  | Validate first and save only on success                                                                    | A failed domain result becomes `ApprovalRejectedError`; repository update occurs only after successful evaluation, preserving state.                                                                                                                                                                                                                                                                                                                                                                                              |
+| Specification tool     | OpenSpec or an alternative spec workflow               | OpenSpec (`@fission-ai/openspec`)                                                                          | OpenSpec setup and change commands are captured in `.ai-sdlc/interaction-log.jsonl`; see §6. Its spec-driven artifacts and workflows are checked in.                                                                                                                                                                                                                                                                                                                                                                              |
+| AI tool                | GitHub Copilot or another AI development environment   | Google Antigravity, primarily using Gemini 3.8 Flash Medium according to the interaction log               | Antigravity supplied the agent-based IDE workflow used in this project and was selected in the OpenSpec tool setup. The log also contains two Claude Opus 4 entries, so this documents the primary environment/model, not exclusive model use. Antigravity is not Copilot. The interaction log records a separate request to enable automatic Copilot PR review; its settings could not be enabled in that session because GitHub returned 404. No Copilot-only requirement appears in the assignment instructions provided here. |
+| Testing stack          | .NET Stryker pin or JavaScript stack                   | Vitest, Playwright, StrykerJS                                                                              | The current application is TypeScript; `.NET Stryker` settings do not apply. Stryker uses the Vitest runner and mutates `src/domain/**/*.ts`.                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ## 4. Architecture and repository layout
 
@@ -61,30 +63,30 @@ openspec/                    Proposal, design, delta spec, task list
 
 `POST /api/approvals/[id]/approve` authenticates a session with one of `Approver`, `Admin`, `Manager`, or `Director`; passes the session's stable `userId`, username, and role to `ApprovalService`; evaluates the approval in the domain; persists only a successful result; and maps errors through `handleApiError`. Demo users have explicit IDs in `src/infrastructure/auth/user-session.ts`, and login includes the ID in the session. Duplicate approval checks compare only `ApproverIdentity.id` against stored `InvoiceApproval.userId`. Domain rejection codes map to HTTP 422.
 
-| Reason code | Meaning |
-|---|---|
-| `LIMIT_EXCEEDED` | Amount is above the role’s single-approver limit. |
-| `SAME_APPROVER` | This user ID already appears in prior approvals. |
+| Reason code                    | Meaning                                                          |
+| ------------------------------ | ---------------------------------------------------------------- |
+| `LIMIT_EXCEEDED`               | Amount is above the role’s single-approver limit.                |
+| `SAME_APPROVER`                | This user ID already appears in prior approvals.                 |
 | `SECOND_APPROVER_NOT_DIRECTOR` | Second approver is neither Director nor Admin in implementation. |
-| `ROLE_NOT_ALLOWED` | The role cannot perform this approval. |
-| `INVOICE_NOT_PENDING` | Invoice is not `PendingApproval` or `PartiallyApproved`. |
+| `ROLE_NOT_ALLOWED`             | The role cannot perform this approval.                           |
+| `INVOICE_NOT_PENDING`          | Invoice is not `PendingApproval` or `PartiallyApproved`.         |
 
 ## 5. How the AI was set up
 
 ### `AGENTS.md` sections
 
-| Section | One-line content |
-|---|---|
-| Layout & Folder Map | Layer boundaries and locations for app, domain, tests, docs, logs, and agents. |
-| The 5 Business Rules & Approval Limits | Inclusive ceilings, dual approval, distinct user IDs, and atomic rejection. |
-| Standardized Rejection Reason Codes | Canonical codes and meanings. |
-| Conventions & Layering | Pure domain logic, validation-first ordering, API/auth/repository expectations. |
-| Commands | Dev, Vitest, Playwright, Stryker, and lint commands. |
-| Test Expectations | Boundary matrix, named negative tests, deep equality, and route integration contract. |
-| Review Expectations & Rubric | Review axes and required Fixed/Dismissed/Deferred verdicts. |
-| Commit Rules | One atomic step per commit and message format. |
-| Demo accounts | Local-only roles for demo/testing. |
-| Never | No secrets, weakened tests, premature mutation, or business logic in UI/routes. |
+| Section                                | One-line content                                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------------- |
+| Layout & Folder Map                    | Layer boundaries and locations for app, domain, tests, docs, logs, and agents.        |
+| The 5 Business Rules & Approval Limits | Inclusive ceilings, dual approval, distinct user IDs, and atomic rejection.           |
+| Standardized Rejection Reason Codes    | Canonical codes and meanings.                                                         |
+| Conventions & Layering                 | Pure domain logic, validation-first ordering, API/auth/repository expectations.       |
+| Commands                               | Dev, Vitest, Playwright, Stryker, and lint commands.                                  |
+| Test Expectations                      | Boundary matrix, named negative tests, deep equality, and route integration contract. |
+| Review Expectations & Rubric           | Review axes and required Fixed/Dismissed/Deferred verdicts.                           |
+| Commit Rules                           | One atomic step per commit and message format.                                        |
+| Demo accounts                          | Local-only roles for demo/testing.                                                    |
+| Never                                  | No secrets, weakened tests, premature mutation, or business logic in UI/routes.       |
 
 ### Cold versus context
 
@@ -92,15 +94,15 @@ The identical Step 1 prompt and comparative notes are in `docs/cold-vs-context.m
 
 ### Skills
 
-| Skill | Purpose | Trigger |
-|---|---|---|
-| `interaction-audit` | Explain/manual-log interaction events not captured by hooks | Significant task, human decision, response/sub-agent summary missing from hooks. |
-| `openspec-propose` | Create proposal/spec/tasks in experimental flow | New feature/change request. |
-| `openspec-explore` | Investigate and clarify an idea | Explore request before/during proposal. |
-| `openspec-apply-change` | Implement tasks from an OpenSpec change | Apply/continue implementation. |
-| `openspec-update-change` | Revise planning artifacts, not code | Requirements or plan change. |
-| `openspec-sync-specs` | Sync delta spec to main specs | Sync request. |
-| `openspec-archive-change` | Finalize/archive completed change | Archive request after implementation. |
+| Skill                     | Purpose                                                     | Trigger                                                                          |
+| ------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `interaction-audit`       | Explain/manual-log interaction events not captured by hooks | Significant task, human decision, response/sub-agent summary missing from hooks. |
+| `openspec-propose`        | Create proposal/spec/tasks in experimental flow             | New feature/change request.                                                      |
+| `openspec-explore`        | Investigate and clarify an idea                             | Explore request before/during proposal.                                          |
+| `openspec-apply-change`   | Implement tasks from an OpenSpec change                     | Apply/continue implementation.                                                   |
+| `openspec-update-change`  | Revise planning artifacts, not code                         | Requirements or plan change.                                                     |
+| `openspec-sync-specs`     | Sync delta spec to main specs                               | Sync request.                                                                    |
+| `openspec-archive-change` | Finalize/archive completed change                           | Archive request after implementation.                                            |
 
 The OpenSpec skill copies also exist under `.claude`, `.github`, and `.agents`; `.agents/skills/.openspec-target` is the selection marker.
 
@@ -109,19 +111,35 @@ The OpenSpec skill copies also exist under `.claude`, `.github`, and `.agents`; 
 `.agents/hooks.json` registers `PreInvocation`, `PreToolUse`, `PostToolUse`, and `Stop`, dispatched by `.agents/scripts/hook-dispatch.sh` to `.agents/scripts/interaction-logger.sh` and its Python logger. Tool starts, failures, prompts, and task termination are recorded in `.ai-sdlc/interaction-log.jsonl`; successful tool completion chatter and passive reads are filtered. Entries are JSONL with `captureStatus` `auto` or `manual`. Example actual entry:
 
 ```json
-{"eventId":"test-final-PreToolUse-1","timestamp":"2026-10-16T07:53:49Z","sessionId":"test-final","actor":"agent","eventType":"tool_execution_start","toolName":"run_command","stepIdx":"1","commandLine":"dotnet test backend/InvoiceApp.sln","fileChanged":"","content":"dotnet test backend/InvoiceApp.sln","summary":"Run: dotnet test backend/InvoiceApp.sln","error":"","terminationReason":"","modelName":"claude-opus-4","captureStatus":"auto"}
+{
+  "eventId": "test-final-PreToolUse-1",
+  "timestamp": "2026-10-16T07:53:49Z",
+  "sessionId": "test-final",
+  "actor": "agent",
+  "eventType": "tool_execution_start",
+  "toolName": "run_command",
+  "stepIdx": "1",
+  "commandLine": "dotnet test backend/InvoiceApp.sln",
+  "fileChanged": "",
+  "content": "dotnet test backend/InvoiceApp.sln",
+  "summary": "Run: dotnet test backend/InvoiceApp.sln",
+  "error": "",
+  "terminationReason": "",
+  "modelName": "claude-opus-4",
+  "captureStatus": "auto"
+}
 ```
 
 At inspection the log had 413 lines: 367 tool starts, 1 tool completion/error event, 11 task terminations, 8 prompt summaries, 8 user requests, 5 response summaries, 11 task summaries, and 2 human decisions. Most recorded model entries were `gemini-3.8-flash-medium` (383) with two `claude-opus-4` entries. These counts describe the inspected log and may grow with future sessions. The present task’s hooks also changed the log; I did not add a manual entry because this assignment request explicitly forbids modifying any file besides `ASSIGNMENT.md`.
 
 ### Agents and sub-agents
 
-| Name | Role | Allowed files | Forbidden files | Output |
-|---|---|---|---|---|
-| Documentation agent (this assignment) | Assemble verified project evidence | `ASSIGNMENT.md` only for this task | All other repository files | This assignment document |
-| Historical implementation agent | The interaction log identifies Gemini 3.8 Flash Medium in most tool events; Antigravity was the primary environment | Repository files and tools used by logged sessions; exact per-agent allowlist not recorded | Per-agent denylist not recorded | Implementation commits and artifacts listed in §7; no per-agent output manifest |
-| Browser sub-agent | One `browser_subagent` invocation is present in the log; the task role is not described beyond the tool name | Not recorded | Not recorded | Invocation is logged; result/artifact mapping is not recorded |
-| Other sub-agents | No additional named sub-agent roster found | Not recorded | Not recorded | Not recorded |
+| Name                                  | Role                                                                                                                | Allowed files                                                                              | Forbidden files                 | Output                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------- | ------------------------------------------------------------------------------- |
+| Documentation agent (this assignment) | Assemble verified project evidence                                                                                  | `ASSIGNMENT.md` only for this task                                                         | All other repository files      | This assignment document                                                        |
+| Historical implementation agent       | The interaction log identifies Gemini 3.8 Flash Medium in most tool events; Antigravity was the primary environment | Repository files and tools used by logged sessions; exact per-agent allowlist not recorded | Per-agent denylist not recorded | Implementation commits and artifacts listed in §7; no per-agent output manifest |
+| Browser sub-agent                     | One `browser_subagent` invocation is present in the log; the task role is not described beyond the tool name        | Not recorded                                                                               | Not recorded                    | Invocation is logged; result/artifact mapping is not recorded                   |
+| Other sub-agents                      | No additional named sub-agent roster found                                                                          | Not recorded                                                                               | Not recorded                    | Not recorded                                                                    |
 
 ## 6. Specification
 
@@ -139,13 +157,13 @@ At inspection the log had 413 lines: 367 tool starts, 1 tool completion/error ev
 
 `docs/cold-vs-context.md` records manual boundary, reason-code, immutability, and high-value workflow refinements. The task checklist says implementation was divided into Step 1 single-approver limits and Step 2 dual approval. The checked-in notes identify these refinements, but do not attribute each individual edit to a person or agent.
 
-| Rule | Spec scenario | Unit test name | E2E |
-|---|---|---|---|
-| Manager/Director limits and boundaries | “Boundary test matrix execution”; “Manager approves invoice at or below limit”; “Director approves invoice at or below single-approver limit” | Step 1 suite: `Manager approves 49,999 (below limit)`, `Manager approves 50,000 (exact inclusive limit)`, `Manager rejected for 50,001 (exceeds limit by 1)`, `Manager rejected for 499,999`, `Manager rejected for 500,000`, `Director cannot sole-approve 500,001...`; corresponding Director boundary tests | Manager rejection at $75,000 in `e2e/tests/app.spec.ts` |
-| First high-value approval and final Director approval | “First approval on high-value invoice by Manager or Director”; “Second approval on high-value invoice by Director” | Step 2: `1st approval by Manager leaves invoice partially approved awaiting second approver`; `1st approval by Director leaves invoice partially approved awaiting second approver`; `2nd approval by distinct Director marks it Approved` | None |
-| Same user cannot approve twice by ID | “Same user attempts second approval on high-value invoice” | `rejects with SAME_APPROVER when the same user attempts second approval`; `validates distinctness using userId, not display name or role` | None |
-| Non-Director cannot be second approver | “Non-director user attempts second approval on high-value invoice” | `rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager` | None |
-| Rejection immutability / state eligibility / role | “Rejected attempt preserves deep equality of invoice”; “Attempting to approve an invoice that is not pending” | Step 1: `Preserves deep equality of invoice on Manager limit rejection`; Step 2 same-user and non-Director tests snapshot and deep-compare input; plus invalid-role/non-pending tests | E2E verifies status remains pending in queue, table, and after reload |
+| Rule                                                  | Spec scenario                                                                                                                                 | Unit test name                                                                                                                                                                                                                                                                                                 | E2E                                                                   |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Manager/Director limits and boundaries                | “Boundary test matrix execution”; “Manager approves invoice at or below limit”; “Director approves invoice at or below single-approver limit” | Step 1 suite: `Manager approves 49,999 (below limit)`, `Manager approves 50,000 (exact inclusive limit)`, `Manager rejected for 50,001 (exceeds limit by 1)`, `Manager rejected for 499,999`, `Manager rejected for 500,000`, `Director cannot sole-approve 500,001...`; corresponding Director boundary tests | Manager rejection at $75,000 in `e2e/tests/app.spec.ts`               |
+| First high-value approval and final Director approval | “First approval on high-value invoice by Manager or Director”; “Second approval on high-value invoice by Director”                            | Step 2: `1st approval by Manager leaves invoice partially approved awaiting second approver`; `1st approval by Director leaves invoice partially approved awaiting second approver`; `2nd approval by distinct Director marks it Approved`                                                                     | None                                                                  |
+| Same user cannot approve twice by ID                  | “Same user attempts second approval on high-value invoice”                                                                                    | `rejects with SAME_APPROVER when the same user attempts second approval`; `validates distinctness using userId, not display name or role`                                                                                                                                                                      | None                                                                  |
+| Non-Director cannot be second approver                | “Non-director user attempts second approval on high-value invoice”                                                                            | `rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager`                                                                                                                                                                                                                                  | None                                                                  |
+| Rejection immutability / state eligibility / role     | “Rejected attempt preserves deep equality of invoice”; “Attempting to approve an invoice that is not pending”                                 | Step 1: `Preserves deep equality of invoice on Manager limit rejection`; Step 2 same-user and non-Director tests snapshot and deep-compare input; plus invalid-role/non-pending tests                                                                                                                          | E2E verifies status remains pending in queue, table, and after reload |
 
 The design document also contains scenarios, examples, reason code definitions, and a boundary table aligned with the implemented status transitions and eligible roles.
 
@@ -247,30 +265,30 @@ npm run lint
 
 ### Outcomes observed during this assignment run
 
-| Command | Result |
-|---|---|
-| `npm test` | Passed: 5 files, 80 tests. |
-| `npm run build` (E2E prerequisite) | Passed: Next.js compiled, type checking and static generation completed. |
-| `npm run test:e2e` | Passed after stable-ID changes: 7 Playwright tests. The sandboxed attempt failed on `EPERM`; approved local server run passed. |
-| `npm --prefix e2e run test:headed` | Passed: 7 Playwright tests in headed Chromium mode. |
-| `npm run mutate` | Passed after stable-ID changes: 214/215 killed (99.53% mutation score), 0 survivors, and 1 no-coverage mutant (`approverName` fallback `'unknown'` to empty string). The previous recorded 232-mutant run remains the checked-in after artifact; the live mutant count differs because the changed source now generates fewer mutants. |
-| `npm run lint` | Did not complete. Next.js opened its first-run ESLint configuration prompt because the repository has no ESLint config. Adding lint configuration is outside this approval-rule implementation follow-up. |
+| Command                            | Result                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                         | Passed: 5 files, 80 tests.                                                                                                                                                                                                                                                                                                             |
+| `npm run build` (E2E prerequisite) | Passed: Next.js compiled, type checking and static generation completed.                                                                                                                                                                                                                                                               |
+| `npm run test:e2e`                 | Passed after stable-ID changes: 7 Playwright tests. The sandboxed attempt failed on `EPERM`; approved local server run passed.                                                                                                                                                                                                         |
+| `npm --prefix e2e run test:headed` | Passed: 7 Playwright tests in headed Chromium mode.                                                                                                                                                                                                                                                                                    |
+| `npm run mutate`                   | Passed after stable-ID changes: 214/215 killed (99.53% mutation score), 0 survivors, and 1 no-coverage mutant (`approverName` fallback `'unknown'` to empty string). The previous recorded 232-mutant run remains the checked-in after artifact; the live mutant count differs because the changed source now generates fewer mutants. |
+| `npm run lint`                     | Did not complete. Next.js opened its first-run ESLint configuration prompt because the repository has no ESLint config. Adding lint configuration is outside this approval-rule implementation follow-up.                                                                                                                              |
 
 **Troubleshooting:** If dev server port 3000 or Playwright port 3001 is occupied, stop the process using it or change the configured port and URL together. If Chromium is missing, run the Playwright install command above. Stryker may need local port binding for its logging server. In-memory state resets on server restart; use `POST /api/test/reset` in local/test mode for deterministic fixtures (production returns 404 unless explicitly enabled).
 
 ## 9. Testing strategy
 
-| Rule / amount | Expected behavior | Tests |
-|---|---|---|
-| 49,999 | Manager and Director approve | Step 1: `Manager approves 49,999 (below limit)` and `Director approves 49,999 (below limit)` |
-| 50,000 | Manager and Director approve inclusive limit | Step 1: `Manager approves 50,000 (exact inclusive limit)` and Director exact Manager limit test |
-| 50,001 | Manager rejected `LIMIT_EXCEEDED`; Director approves | Step 1 Manager rejection and Director within Director limit tests |
-| 499,999 | Manager rejected; Director approves | Step 1 tests for both roles |
-| 500,000 | Manager rejected; Director approves inclusive limit | Step 1 tests for both roles |
-| 500,001 | One approval is not final; distinct eligible approvers required | Step 1 `Director cannot sole-approve 500,001...`; Step 2 first approval, second Director tests |
-| Same user twice | `SAME_APPROVER`, compare ID | Step 2 `rejects with SAME_APPROVER when the same user attempts second approval`; also `validates distinctness using userId, not display name or role` |
-| Non-Director second | `SECOND_APPROVER_NOT_DIRECTOR` | Step 2 `rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager` |
-| Invalid role/status | `ROLE_NOT_ALLOWED` / `INVOICE_NOT_PENDING` | Step 1 invalid-role and non-pending tests; Step 2 unauthorized first approver test |
+| Rule / amount       | Expected behavior                                               | Tests                                                                                                                                                 |
+| ------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 49,999              | Manager and Director approve                                    | Step 1: `Manager approves 49,999 (below limit)` and `Director approves 49,999 (below limit)`                                                          |
+| 50,000              | Manager and Director approve inclusive limit                    | Step 1: `Manager approves 50,000 (exact inclusive limit)` and Director exact Manager limit test                                                       |
+| 50,001              | Manager rejected `LIMIT_EXCEEDED`; Director approves            | Step 1 Manager rejection and Director within Director limit tests                                                                                     |
+| 499,999             | Manager rejected; Director approves                             | Step 1 tests for both roles                                                                                                                           |
+| 500,000             | Manager rejected; Director approves inclusive limit             | Step 1 tests for both roles                                                                                                                           |
+| 500,001             | One approval is not final; distinct eligible approvers required | Step 1 `Director cannot sole-approve 500,001...`; Step 2 first approval, second Director tests                                                        |
+| Same user twice     | `SAME_APPROVER`, compare ID                                     | Step 2 `rejects with SAME_APPROVER when the same user attempts second approval`; also `validates distinctness using userId, not display name or role` |
+| Non-Director second | `SECOND_APPROVER_NOT_DIRECTOR`                                  | Step 2 `rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager`                                                                  |
+| Invalid role/status | `ROLE_NOT_ALLOWED` / `INVOICE_NOT_PENDING`                      | Step 1 invalid-role and non-pending tests; Step 2 unauthorized first approver test                                                                    |
 
 ### Negative rules and unchanged state
 
@@ -859,13 +877,13 @@ All files               | 100.00 |  100.00 |      232 |         0 |          0 |
 
 ### Survivor triage
 
-| Surviving mutant in before run | Triage |
-|---|---|
-| `approval-limits.ts`: role gate mutant | `1st approval by unauthorized role is rejected with ROLE_NOT_ALLOWED` and the corresponding single-approver unauthorized-role test assert the rejection code and message. |
-| `approval-limits.ts`: duplicate-identity predicate/method mutants | `rejects with SAME_APPROVER when the same user attempts second approval`, `validates distinctness using userId, not display name or role`, and service/API dual-approval cases distinguish ID equality from same-role distinct users. |
-| `approval-limits.ts`: second-approver role and rejection-message mutants | `rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager` asserts both code and message; Director/Admin completion tests check permitted outcomes. |
-| `approval-limits.ts`: limit, decision, status, and approval-record mutants | Boundary cases at 50,000/50,001/499,999/500,000/500,001 assert acceptance/rejection, status, IDs, roles, and approval counts; limit-rejection cases assert reason and message. |
-| `approval-service.ts`: pending-state, identity extraction, and error mutants | `ApprovalService Approve_RejectsInvoiceThatIsStillADraft`, explicit-ID/username identity tests, and missing-invoice/error assertions cover service behavior. The after report shows all service mutants killed. |
+| Surviving mutant in before run                                               | Triage                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `approval-limits.ts`: role gate mutant                                       | `1st approval by unauthorized role is rejected with ROLE_NOT_ALLOWED` and the corresponding single-approver unauthorized-role test assert the rejection code and message.                                                             |
+| `approval-limits.ts`: duplicate-identity predicate/method mutants            | `rejects with SAME_APPROVER when the same user attempts second approval`, `validates distinctness using userId, not display name or role`, and service/API dual-approval cases distinguish ID equality from same-role distinct users. |
+| `approval-limits.ts`: second-approver role and rejection-message mutants     | `rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager` asserts both code and message; Director/Admin completion tests check permitted outcomes.                                                                |
+| `approval-limits.ts`: limit, decision, status, and approval-record mutants   | Boundary cases at 50,000/50,001/499,999/500,000/500,001 assert acceptance/rejection, status, IDs, roles, and approval counts; limit-rejection cases assert reason and message.                                                        |
+| `approval-service.ts`: pending-state, identity extraction, and error mutants | `ApprovalService Approve_RejectsInvoiceThatIsStillADraft`, explicit-ID/username identity tests, and missing-invoice/error assertions cover service behavior. The after report shows all service mutants killed.                       |
 
 The recorded score rose from **82.04% (201 killed, 19 survived, 25 no coverage)** to **100.00% (232 killed, 0 survived, 0 no coverage)**. The current stable-ID follow-up run scored **99.53% (214/215 killed; 0 survived; 1 no coverage)** because Stryker generated a no-coverage mutant for the display-name fallback from the user ID to `unknown`. It does not affect approval identity or authorization. The checked-in before/after reports preserve the earlier runs.
 
@@ -873,16 +891,16 @@ The recorded score rose from **82.04% (201 killed, 19 survived, 25 no coverage)*
 
 **PR:** [#8](https://github.com/AdarshN7/ai-sdlc-demo-app/pull/8). The checked-in PR narrative is `docs/pull-request-description.md`; the source also contains a comparison link. Review prompt: `.github/instructions/pull-request-review.instructions.md` (evaluate boundary operators, user-ID distinctness, validate-first order, layering, and mutation-resistant tests).
 
-| # | Finding | Severity | Verdict | Reason or fix commit |
-|---:|---|---|---|---|
-| 1 | Default identity fallback `approver.id || approver.username || 'unknown'` may accept an unverified identity when domain function is called directly. | Low | Dismissed | PR description says `requireAuth` guarantees authenticated identity before route invocation; domain fallback is defensive. |
-| 2 | High-value dual approval permits Manager or Director as first approver. | Low | Dismissed | Explicitly allowed by requirements; second approval is still constrained. |
-| 3 | Rejected attempts do not create an audit trail/decision note. | Low | Deferred | Valid follow-up; durable failed-attempt audit logging deferred to database audit phase. |
-| 4 | Test reset endpoint could be triggered inadvertently in production. | Medium | Fixed | Added `ALLOW_TEST_RESET=true` production guard and Playwright environment in `24de945`. |
-| 5 | UI formats `PendingApproval` as `Pending Approval`, confusing selectors. | Low | Fixed | Normalized page object and E2E assertions in `24de945`. |
-| 6 | Could append more approvals to already Approved invoice. | High | Dismissed | Domain eligibility guard rejects nonpending/non-partially-approved status; unit tests cover it. |
-| 7 | USD formatting is hardcoded. | Low | Deferred | Single currency is an assignment assumption; multi-currency deferred to localization work. |
-| 8 | Concurrent Director approvals could conflict in memory. | Medium | Deferred | Demo uses one process; database locking/versioning is deferred to persistence migration. |
+|   # | Finding                                                                  | Severity | Verdict           | Reason or fix commit                                                                            |
+| --: | ------------------------------------------------------------------------ | -------- | ----------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+|   1 | Default identity fallback `approver.id                                   |          | approver.username |                                                                                                 | 'unknown'` may accept an unverified identity when domain function is called directly. | Low | Dismissed | PR description says `requireAuth` guarantees authenticated identity before route invocation; domain fallback is defensive. |
+|   2 | High-value dual approval permits Manager or Director as first approver.  | Low      | Dismissed         | Explicitly allowed by requirements; second approval is still constrained.                       |
+|   3 | Rejected attempts do not create an audit trail/decision note.            | Low      | Deferred          | Valid follow-up; durable failed-attempt audit logging deferred to database audit phase.         |
+|   4 | Test reset endpoint could be triggered inadvertently in production.      | Medium   | Fixed             | Added `ALLOW_TEST_RESET=true` production guard and Playwright environment in `24de945`.         |
+|   5 | UI formats `PendingApproval` as `Pending Approval`, confusing selectors. | Low      | Fixed             | Normalized page object and E2E assertions in `24de945`.                                         |
+|   6 | Could append more approvals to already Approved invoice.                 | High     | Dismissed         | Domain eligibility guard rejects nonpending/non-partially-approved status; unit tests cover it. |
+|   7 | USD formatting is hardcoded.                                             | Low      | Deferred          | Single currency is an assignment assumption; multi-currency deferred to localization work.      |
+|   8 | Concurrent Director approvals could conflict in memory.                  | Medium   | Deferred          | Demo uses one process; database locking/versioning is deferred to persistence migration.        |
 
 The checked-in PR narrative includes all eight findings and verdicts. Disagreement is documented for findings 1, 2, 6: the review recommendations were dismissed based on existing auth boundary, explicit requirements, and lifecycle guard.
 
@@ -894,14 +912,14 @@ Log: `.ai-sdlc/interaction-log.jsonl`. Format: one JSON object per line. Hooks i
 
 **Video:** Awaiting upload — existing placeholder retained: [Watch Demo Video Walkthrough](https://youtu.be/ai-sdlc-demo-app-walkthrough). Replace/confirm with the uploaded recording. Target duration: 8–10 minutes. The PR narrative references `FRS-Roadmap-implementation-plan/demo-video-script.md`, but that file is absent from the current repository and commit history; the timestamp outline above provides a concise recording plan.
 
-| Approx. time | Live content |
-|---|---|
-| 0:00–1:30 | Feature and architecture; `AGENTS.md`, hook and log setup. |
-| 1:30–2:30 | OpenSpec requirements and boundary matrix. |
-| 2:30–5:00 | Run Vitest and explain both negative rules and immutability. |
-| 5:00–7:00 | Run/compare mutation results (82.04% before, 100.00% after). |
-| 7:00–8:30 | Run Playwright rejection workflow. |
-| 8:30–9:30 | PR finding triage and limitations. |
+| Approx. time | Live content                                                 |
+| ------------ | ------------------------------------------------------------ |
+| 0:00–1:30    | Feature and architecture; `AGENTS.md`, hook and log setup.   |
+| 1:30–2:30    | OpenSpec requirements and boundary matrix.                   |
+| 2:30–5:00    | Run Vitest and explain both negative rules and immutability. |
+| 5:00–7:00    | Run/compare mutation results (82.04% before, 100.00% after). |
+| 7:00–8:30    | Run Playwright rejection workflow.                           |
+| 8:30–9:30    | PR finding triage and limitations.                           |
 
 ## 14. Limitations, risks and next steps
 

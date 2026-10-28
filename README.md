@@ -1,5 +1,7 @@
 # Invoice Approval Demo App
 
+### Author: Adarsh Nishad
+
 A full-stack invoice approval application built with **Next.js 14 App Router** and **TypeScript**, migrated from .NET 8 to demonstrate modern AI-in-SDLC practices. The application features **role-based approval limits** and a **dual-approver workflow for high-value invoices**, with business rules isolated in a pure domain layer. It includes unit, integration, and end-to-end tests, plus Stryker mutation testing.
 
 ---
@@ -120,13 +122,13 @@ stateDiagram-v2
 
 ### Standardized Rejection Reason Codes
 
-| Code | HTTP Status | Description |
-| :--- | :--- | :--- |
-| `LIMIT_EXCEEDED` | `422 Unprocessable Entity` | Attempted approval amount exceeds the user's role maximum limit. |
-| `SAME_APPROVER` | `422 Unprocessable Entity` | Same user attempted to approve an invoice twice. |
+| Code                           | HTTP Status                | Description                                                                       |
+| :----------------------------- | :------------------------- | :-------------------------------------------------------------------------------- |
+| `LIMIT_EXCEEDED`               | `422 Unprocessable Entity` | Attempted approval amount exceeds the user's role maximum limit.                  |
+| `SAME_APPROVER`                | `422 Unprocessable Entity` | Same user attempted to approve an invoice twice.                                  |
 | `SECOND_APPROVER_NOT_DIRECTOR` | `422 Unprocessable Entity` | High-value second approval attempted by a user who is neither Director nor Admin. |
-| `ROLE_NOT_ALLOWED` | `422 Unprocessable Entity` | User's role is not permitted by the approval rules. |
-| `INVOICE_NOT_PENDING` | `409 Conflict` | Invoice is not in `PendingApproval` or `PartiallyApproved` state. |
+| `ROLE_NOT_ALLOWED`             | `422 Unprocessable Entity` | User's role is not permitted by the approval rules.                               |
+| `INVOICE_NOT_PENDING`          | `409 Conflict`             | Invoice is not in `PendingApproval` or `PartiallyApproved` state.                 |
 
 ---
 
@@ -134,14 +136,14 @@ stateDiagram-v2
 
 The application includes predefined accounts for local testing (in-memory demo credentials):
 
-| Username | Password | Role | Description / Permissions |
-| :--- | :--- | :--- | :--- |
-| `demo.manager` | `ChangeMe123!` | `Manager` | Approves invoices up to $50,000; may provide the first approval above $500,000. |
-| `demo.director` | `ChangeMe123!` | `Director` | Sole-approves up to $500,000; may provide either approval above $500,000. |
-| `demo.director1` | `ChangeMe123!` | `Director` | First Director account for dual-approval testing. |
-| `demo.director2` | `ChangeMe123!` | `Director` | Second Director account for distinct-approver testing. |
-| `demo.approver` | `ChangeMe123!` | `Approver` | Approves invoices up to $50,000. |
-| `demo.admin` | `ChangeMe123!` | `Admin` | May approve invoices and participate in either step of high-value approval. |
+| Username         | Password       | Role       | Description / Permissions                                                       |
+| :--------------- | :------------- | :--------- | :------------------------------------------------------------------------------ |
+| `demo.manager`   | `ChangeMe123!` | `Manager`  | Approves invoices up to $50,000; may provide the first approval above $500,000. |
+| `demo.director`  | `ChangeMe123!` | `Director` | Sole-approves up to $500,000; may provide either approval above $500,000.       |
+| `demo.director1` | `ChangeMe123!` | `Director` | First Director account for dual-approval testing.                               |
+| `demo.director2` | `ChangeMe123!` | `Director` | Second Director account for distinct-approver testing.                          |
+| `demo.approver`  | `ChangeMe123!` | `Approver` | Approves invoices up to $50,000.                                                |
+| `demo.admin`     | `ChangeMe123!` | `Admin`    | May approve invoices and participate in either step of high-value approval.     |
 
 ---
 
@@ -149,18 +151,18 @@ The application includes predefined accounts for local testing (in-memory demo c
 
 All endpoints except login require an `Authorization: Bearer <token>` header. `POST /api/auth/login` returns the token used by subsequent requests.
 
-| Method | Route | Access and behavior |
-| :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Public; validates demo credentials and creates an in-memory session. |
-| `POST` | `/api/auth/logout` | Ends the bearer-token session. |
-| `GET` | `/api/invoices` | Lists invoices; optional `?status=Draft` status filter. |
-| `POST` | `/api/invoices` | Creates an invoice from `customerName` and `amount`. |
-| `GET` | `/api/invoices/:id` | Returns one invoice. |
-| `DELETE` | `/api/invoices/:id` | Admin only. |
-| `POST` | `/api/invoices/:id/submit` | Submits a draft for approval. |
-| `POST` | `/api/approvals/:id/approve` | Evaluates and records an approval when valid. |
-| `POST` | `/api/approvals/:id/reject` | Rejects an invoice with a required `reason`. |
-| `POST` | `/api/test/reset` | Resets demo invoices; hidden in production unless `ALLOW_TEST_RESET=true`. |
+| Method   | Route                        | Access and behavior                                                        |
+| :------- | :--------------------------- | :------------------------------------------------------------------------- |
+| `POST`   | `/api/auth/login`            | Public; validates demo credentials and creates an in-memory session.       |
+| `POST`   | `/api/auth/logout`           | Ends the bearer-token session.                                             |
+| `GET`    | `/api/invoices`              | Lists invoices; optional `?status=Draft` status filter.                    |
+| `POST`   | `/api/invoices`              | Creates an invoice from `customerName` and `amount`.                       |
+| `GET`    | `/api/invoices/:id`          | Returns one invoice.                                                       |
+| `DELETE` | `/api/invoices/:id`          | Admin only.                                                                |
+| `POST`   | `/api/invoices/:id/submit`   | Submits a draft for approval.                                              |
+| `POST`   | `/api/approvals/:id/approve` | Evaluates and records an approval when valid.                              |
+| `POST`   | `/api/approvals/:id/reject`  | Rejects an invoice with a required `reason`.                               |
+| `POST`   | `/api/test/reset`            | Resets demo invoices; hidden in production unless `ALLOW_TEST_RESET=true`. |
 
 Approval rejections return HTTP 422 with `reason`, `error`, and `message` fields. Other common responses include 400 for invalid input, 401 for a missing or invalid session, 403 for role-based access denial, 404 for missing resources, and 409 for invalid state transitions.
 
@@ -201,6 +203,7 @@ ai-sdlc-demo-app/
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18.17+ or Node.js 20+
 - npm 9+
 
@@ -228,6 +231,7 @@ npm start
 ## 🧪 Testing & Quality Assurance
 
 ### 1. Unit & Integration Tests (Vitest)
+
 Executes domain boundary tests, negative rules, deep equality checks, and API Route Handler integration:
 
 ```bash
@@ -235,11 +239,13 @@ npm test
 ```
 
 Watch mode:
+
 ```bash
 npm run test:watch
 ```
 
 ### 2. End-to-End Tests (Playwright)
+
 Executes complete browser interactions verifying role switches, limits validation, and dual-approver workflows:
 
 ```bash
@@ -247,6 +253,7 @@ npm run test:e2e
 ```
 
 ### 3. Mutation Testing (StrykerJS)
+
 Verifies test suite resilience by introducing artificial faults (mutants) into the domain evaluation logic:
 
 ```bash
@@ -254,6 +261,7 @@ npm run mutate
 ```
 
 ### 4. Code Quality & Linting
+
 ```bash
 npm run lint
 ```
