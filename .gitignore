@@ -3,12 +3,13 @@ node_modules/
 .next/
 .env
 *.tsbuildinfo
-test-results/
-playwright-report/
-reports/
 .stryker-tmp/
+# test-results/
+# playwright-report/
+# reports/
 # AI interaction logging — temporary files only
 .ai-sdlc/.seen-events/
 .ai-sdlc/.lock/
 # NOTE: .ai-sdlc/interaction-log.jsonl is NOT gitignored — it is the required AI interaction log.
 .DS_Store
+FRS-Roadmap-implementation-plan/

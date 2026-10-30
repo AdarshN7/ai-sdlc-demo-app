@@ -38,6 +38,22 @@ export default function Home() {
 
   const customerInputRef = useRef<HTMLInputElement>(null);
 
+  const signOut = useCallback(() => {
+    if (session) {
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.token}`,
+        },
+      }).catch(() => { });
+    }
+    setSession(null);
+    sessionStorage.removeItem('session');
+    setInvoices([]);
+    setActiveTab('invoices');
+  }, [session]);
+
   const api = useCallback(
     async (path: string, options: RequestInit = {}) => {
       const headers: Record<string, string> = {
@@ -63,7 +79,7 @@ export default function Home() {
       }
       return body;
     },
-    [session]
+    [session, signOut]
   );
 
   const refresh = useCallback(async () => {
@@ -91,16 +107,6 @@ export default function Home() {
       refresh();
     }
   }, [session, refresh]);
-
-  const signOut = () => {
-    if (session) {
-      api('/auth/logout', { method: 'POST' }).catch(() => { });
-    }
-    setSession(null);
-    sessionStorage.removeItem('session');
-    setInvoices([]);
-    setActiveTab('invoices');
-  };
 
   const handleSwitchUser = async (targetUsername: string, targetPassword?: string) => {
     try {

@@ -2,8 +2,9 @@
 
 **Target Branch**: `main`  
 **Source Branch**: `feat/approval-limits-step4-e2e`  
-**Direct GitHub Comparison Link**: [Compare & Open PR on GitHub](https://github.com/AdarshN7/ai-sdlc-demo-app/compare/main...feat/approval-limits-step4-e2e)  
-**Deliverable Document**: [ASSIGNMENT.md](file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/ASSIGNMENT.md)  
+**Pull Request**: [PR #8](https://github.com/AdarshN7/ai-sdlc-demo-app/pull/8)
+**All closed PRs**: [Repository PR index](https://github.com/AdarshN7/ai-sdlc-demo-app/pulls?q=is%3Apr+state%3Aclosed)
+**Deliverable Document**: [ASSIGNMENT.md](../ASSIGNMENT.md)
 
 ---
 
@@ -35,8 +36,8 @@ This Pull Request completes **Phase 7: Playwright E2E Test** and integrates the 
      - Verifies user switcher switching to Director.
 
 5. **Deliverables Documentation**:
-   - Created root [ASSIGNMENT.md](file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/ASSIGNMENT.md) with comprehensive analysis, Cold-vs-Context evaluation, Stryker mutation scores before/after, and AI logging summaries.
-   - Created [FRS-Roadmap-implementation-plan/demo-video-script.md](file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/FRS-Roadmap-implementation-plan/demo-video-script.md) with an exact 9-minute word-for-word audio/narration and visual cue script.
+   - Added the root [ASSIGNMENT.md](../ASSIGNMENT.md) with architecture, test, mutation, interaction-log, and review evidence.
+   - Demo video URLs and an outline are documented in the assignment. The previously referenced `FRS-Roadmap-implementation-plan/demo-video-script.md` is not present in this repository.
 
 ---
 
@@ -52,8 +53,8 @@ The full diff was reviewed using the workshop review prompt (`.github/instructio
 | **4** | Test reset route `/api/test/reset` could be triggered inadvertently if running in production mode. | Medium | **Fixed** | Updated `src/app/api/test/reset/route.ts` to require `ALLOW_TEST_RESET: 'true'` in production mode, and configured Playwright `webServer` environment in commit `24de945`. |
 | **5** | Invoices UI table displays formatted status `"Pending Approval"` while raw domain status is `"PendingApproval"`, causing selector confusion. | Low | **Fixed** | Updated page objects in `e2e/pages/InvoicesPage.ts` and normalized E2E assertions in `e2e/tests/app.spec.ts` in commit `24de945`. |
 | **6** | Potential for multiple approvals to be appended if an invoice is already in `Approved` state. | High | **Dismissed** | Protected by invariant guard: `evaluateApproval` checks `if (invoice.status !== 'PendingApproval' && invoice.status !== 'PartiallyApproved') return { ok: false, reason: 'INVOICE_NOT_PENDING' }`. Verified by explicit unit tests. |
-| **7** | Hardcoded USD currency formatting across React components and formatters. | Low | **Deferred** | Out of scope: The assignment assumption explicitly defines: *"Amounts are stored as integers with one currency."* Multi-currency support is deferred to future localization sprint. |
-| **8** | Potential concurrency conflict if two Directors approve a high-value invoice at the exact same millisecond in-memory. | Medium | **Deferred** | For this single-process in-memory demo, JavaScript event-loop concurrency guarantees sequential execution. Database row locking (`SELECT FOR UPDATE`) or optimistic concurrency versioning is deferred to PostgreSQL migration. |
+| **7** | Hardcoded USD currency formatting across React components and formatters. | Low | **Deferred** | Multi-currency presentation is outside this approval-limit change; currency selection and conversion need a separate product requirement. |
+| **8** | Potential concurrency conflict if two Directors approve a high-value invoice at the exact same millisecond in-memory. | Medium | **Deferred** | The in-memory repository has no transaction or version check. Concurrency protection is deferred to durable persistence. |
 
 ---
 
