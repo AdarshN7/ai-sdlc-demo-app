@@ -70,18 +70,20 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
       expect(invoice).toEqual(invoiceSnapshot);
     });
 
-    it('1st approval by Admin leaves invoice partially approved', () => {
+    it('rejects Admin as first approver with ROLE_NOT_ALLOWED and unchanged invoice', () => {
       const invoice = createInvoice(600_000);
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
       const result = evaluateApproval(invoice, {
         id: 'admin-1',
         role: 'Admin',
       });
 
-      expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.invoice.status).toBe('PartiallyApproved');
-        expect(result.invoice.approvals?.[0].role).toBe('Admin');
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('ROLE_NOT_ALLOWED');
+        expect(result.message).toBe('Role Admin is not permitted to approve invoices.');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
   });
 
@@ -143,7 +145,7 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
       }
     });
 
-    it('2nd approval by distinct Admin completes approval to Approved', () => {
+    it('rejects Admin as second approver with SECOND_APPROVER_NOT_DIRECTOR and unchanged invoice', () => {
       const invoice: Invoice = {
         ...createInvoice(600_000),
         status: 'PartiallyApproved',
@@ -155,22 +157,24 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
           },
         ],
       };
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
 
       const result = evaluateApproval(invoice, {
         id: 'admin-1',
         role: 'Admin',
       });
 
-      expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.invoice.status).toBe('Approved');
-        expect(result.invoice.approvals?.[1].role).toBe('Admin');
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('SECOND_APPROVER_NOT_DIRECTOR');
+        expect(result.message).toBe('Second approval requires a Director.');
       }
+      expect(invoice).toEqual(invoiceSnapshot);
     });
   });
 
   describe('Negative Rule 1: Duplicate Approver (SAME_APPROVER)', () => {
-    it('rejects with SAME_APPROVER when the same user attempts second approval', () => {
+    it('rejects the same Director twice with SAME_APPROVER and unchanged invoice', () => {
       const invoice: Invoice = {
         ...createInvoice(600_000),
         status: 'PartiallyApproved',
@@ -222,6 +226,34 @@ describe('Phase 5: Step 2 – Two-Approver Rule (> 500,000)', () => {
       expect(sameUserResult.ok).toBe(false);
       if (!sameUserResult.ok) {
         expect(sameUserResult.reason).toBe('SAME_APPROVER');
+      }
+      expect(invoice).toEqual(invoiceSnapshot);
+    });
+
+    it('rejects the same user ID as Manager first approver and Director second approver', () => {
+      const invoice: Invoice = {
+        ...createInvoice(600_000),
+        status: 'PartiallyApproved',
+        approvals: [
+          {
+            userId: 'shared-user-id',
+            role: 'Manager',
+            timestamp: '2026-01-01T10:00:00.000Z',
+          },
+        ],
+      };
+      const invoiceSnapshot = JSON.parse(JSON.stringify(invoice));
+
+      const result = evaluateApproval(invoice, {
+        id: 'shared-user-id',
+        username: 'different.display.name',
+        role: 'Director',
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('SAME_APPROVER');
+        expect(result.message).toBe('The same user cannot approve an invoice twice.');
       }
       expect(invoice).toEqual(invoiceSnapshot);
     });
