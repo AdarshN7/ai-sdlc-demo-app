@@ -42,8 +42,30 @@ This Pull Request completes **Phase 7: Playwright E2E Test** and integrates the 
 5. **Deliverables Documentation**:
    - Added the root [ASSIGNMENT.md](../ASSIGNMENT.md) with architecture, test, mutation, interaction-log, and review evidence.
    - Demo video URLs and an outline are documented in the assignment. The previously referenced `FRS-Roadmap-implementation-plan/demo-video-script.md` is not present in this repository.
+6. **Approval Policy Remediation**:
+   - High-value approvals now require a Manager or Director first (Manager stays `PartiallyApproved`) and a distinct Director second. Admin is rejected at both high-value steps.
+   - Added reason-code and deep-equality tests for Admin first/second rejection and same user IDs across different roles; the existing Manager-second test remains.
+   - Added five scoped agent definitions and refreshed the mutation output.
 
 ---
+
+## External Review Findings
+
+The original external review transcripts were not checked into this repository; these summaries record the Admin/Manager findings named for this remediation.
+
+| Source | Finding | Severity | Verdict | Evidence / rationale |
+| :--- | :--- | :---: | :---: | :--- |
+| Antigravity | Admin could participate in high-value approvals despite D1/D2. | High | **Fixed** | OpenSpec policy in `56b2c8c`, expected-red tests in `2c0ddda`, domain enforcement in `bf0e7c6`; Admin now receives `ROLE_NOT_ALLOWED` as first approver and `SECOND_APPROVER_NOT_DIRECTOR` as second, with deep-equal snapshots. |
+| Copilot | Manager's first approval above the $50,000 sole-approval limit needed explicit non-final semantics. | Medium | **Fixed** | D2 specifies a Manager or Director may provide the first high-value approval, but it remains `PartiallyApproved`; the Step 2 Manager-first test asserts that transition. Spec and project guidance clarified in `56b2c8c` and `f99e9f0`. |
+| npm audit | Installed dependency tree reports 13 vulnerabilities (5 moderate, 5 high, 3 critical). | High | **Deferred** | Demo-only in-memory application; dependency remediation is deferred, and the dependencies must be reviewed before production deployment. |
+
+## Reviewer Sub-agent Findings
+
+The complete remediation diff was reviewed read-only against `.github/instructions/pull-request-review.instructions.md` by a reviewer separate from the implementer.
+
+| Source | Finding | Severity | Verdict | Evidence / rationale |
+| :--- | :--- | :---: | :---: | :--- |
+| Reviewer sub-agent | The boundary requirement described a Director's $50,001 sole approval as partial, conflicting with the $500,000 dual-approval threshold and existing tests. | Medium | **Fixed** | Corrected the spec to state that a Director sole-approves $50,001 and that Manager `LIMIT_EXCEEDED` applies to sole approval through $500,000; changes included in the Phase 6 review-docs commit. |
 
 ## Workshop Review Findings Triage Table
 
@@ -51,8 +73,8 @@ The full diff was reviewed using the workshop review prompt (`.github/instructio
 
 | # | Finding Description | Severity | Verdict | Reason or Resolution Commit |
 | :-: | :--- | :---: | :---: | :--- |
-| **1** | Default approver fallback `approver.id \|\| approver.username \|\| 'unknown'` in `evaluateApproval` could accept unverified identities if invoked directly. | Low | **Dismissed** | Defensible design: `requireAuth` middleware guarantees authenticated credentials with valid `userId` upstream before reaching route handler. The domain fallback is a safe defensive default. |
-| **2** | High-value dual-approval rule allows either Manager or Director to be the first approver. | Low | **Dismissed** | Working as designed: The requirement specification explicitly permits Manager, Director, or Admin to submit the initial approval on invoices $> 500,000$, holding the invoice in `PartiallyApproved` until a distinct Director submits the second approval. |
+| **1** | Default approver fallback `approver.id \|\| approver.username \|\| 'unknown'` in `evaluateApproval` could accept unverified identities if invoked directly. | Low | **Dismissed** | `ApproverIdentity.id` is required and duplicate checks use `approver.id`; the fallback only supplies the display field `decidedBy`, not approval identity or authorization. |
+| **2** | High-value dual-approval allows a Manager to submit the first approval above the single-approval limit. | Low | **Dismissed** | D2 explicitly allows a Manager or Director to submit the first approval above 500,000, but the Manager transition is `PartiallyApproved`, never final approval. Admin is excluded; see the remediation findings below. |
 | **3** | Rejection audit trail / decision note is not recorded for rejected approval attempts (only on explicit user rejections). | Low | **Deferred** | Valid feature improvement, but out of current workshop scope. In-memory approval attempts fail atomically returning HTTP 422 with structured `reason`. Persisting audit records for failed approval attempts is deferred to the database audit logging phase. |
 | **4** | Test reset route `/api/test/reset` could be triggered inadvertently if running in production mode. | Medium | **Fixed** | Updated `src/app/api/test/reset/route.ts` to require `ALLOW_TEST_RESET: 'true'` in production mode, and configured Playwright `webServer` environment in commit `24de945`. |
 | **5** | Invoices UI table displays formatted status `"Pending Approval"` while raw domain status is `"PendingApproval"`, causing selector confusion. | Low | **Fixed** | Updated page objects in `e2e/pages/InvoicesPage.ts` and normalized E2E assertions in `e2e/tests/app.spec.ts` in commit `24de945`. |
@@ -64,7 +86,7 @@ The full diff was reviewed using the workshop review prompt (`.github/instructio
 
 ## Test Verification Summary
 
-- **Unit & Integration Tests**: 80/80 passed (`npm test`)
+- **Unit & Integration Tests**: 81/81 passed (`npm test`)
 - **Playwright E2E Tests**: 7/7 passed (`npm run test:e2e`)
-- **Stryker Mutation Testing**: 100.00% score (232 killed, 0 survived, 0 no-coverage) (`npm run mutate`)
+- **Stryker Mutation Testing**: 99.50% score (201 killed, 0 survived, 1 no-coverage display-fallback mutant; 202 mutants) (`npm run mutate`)
 - **Next.js Production Build**: Passed (`npm run build`)

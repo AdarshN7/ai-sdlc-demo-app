@@ -28,5 +28,5 @@
 - [x] 3.3 Update only the domain approval evaluator to enforce the approved high-value roles; preserve Admin's unrelated sole-approval and invoice-administration permissions.
 - [x] 3.4 Rerun mutation testing, account for the display-fallback mutant, and replace `docs/mutation/after.txt` with the full fresh run output.
 - [x] 3.5 Add standalone role-specific agent definitions and update `AGENTS.md`, `ASSIGNMENT.md`, and the PR description with current policy and audit evidence.
-- [ ] 3.6 Review the complete remediation diff with a reviewer separate from the implementer and update the PR findings/verdicts.
+- [x] 3.6 Review the complete remediation diff with a reviewer separate from the implementer and update the PR findings/verdicts.
 - [ ] 3.7 Run final tests, lint, build, E2E, mutation, and strict OpenSpec validation; record current interaction-log evidence.

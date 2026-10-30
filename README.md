@@ -115,7 +115,7 @@ stateDiagram-v2
 1. **Manager Approval Limit ($\le 50,000$)**:
    - `MANAGER_APPROVAL_LIMIT = 50_000` (inclusive).
    - Managers may approve invoices with amount $\le 50,000$.
-   - Any attempt by a Manager to approve an amount $> 50,000$ is rejected with `LIMIT_EXCEEDED`.
+   - Any attempt by a Manager to sole-approve an amount $> 50,000$ and $\le 500,000$ is rejected with `LIMIT_EXCEEDED`. This does not block the Manager's first partial approval on invoices above 500,000 under the dual-approver rule.
 2. **Director Approval Limit ($\le 500,000$)**:
    - `DIRECTOR_APPROVAL_LIMIT = 500_000` (inclusive).
    - Directors and Admins may sole-approve invoices with amount $\le 500,000$, transitioning directly from `PendingApproval` to `Approved`.

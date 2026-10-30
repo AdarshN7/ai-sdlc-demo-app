@@ -23,7 +23,7 @@ All approval decisions are validated by pure domain logic before any repository 
 1. **Manager Approval Limit**:
    - `MANAGER_APPROVAL_LIMIT = 50_000` (inclusive).
    - A Manager may approve invoices with amount $\le$ 50,000.
-   - Any attempt by a Manager to approve an amount $> 50,000$ (e.g. 50,001) MUST be rejected with standardized reason code `LIMIT_EXCEEDED`.
+   - Any attempt by a Manager to sole-approve an amount $> 50,000$ and $\le$ 500,000 (e.g. 50,001) MUST be rejected with standardized reason code `LIMIT_EXCEEDED`. This does not block the Manager's first partial approval on invoices above 500,000 under rule 3.
 
 2. **Director Approval Limit**:
    - `DIRECTOR_APPROVAL_LIMIT = 500_000` (inclusive).
