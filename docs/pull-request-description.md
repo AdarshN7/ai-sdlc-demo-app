@@ -6,6 +6,10 @@
 **All closed PRs**: [Repository PR index](https://github.com/AdarshN7/ai-sdlc-demo-app/pulls?q=is%3Apr+state%3Aclosed)
 **Deliverable Document**: [ASSIGNMENT.md](../ASSIGNMENT.md)
 
+## Commit Message Convention
+
+The original implementation commits `c4648c9` and `a5bae3e` predate the `Why:` trailer convention. They are part of existing history and were not rewritten. The remediation commits use a `Why:` explanation and Copilot co-author trailer.
+
 ---
 
 ## Summary of Changes

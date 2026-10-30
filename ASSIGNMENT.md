@@ -12,9 +12,11 @@
 
 This assignment implements role based approval limits in the invoice approval service. This file collects the requirements, design, implementation evidence, specification, tests, mutation results, review findings, AI setup, run instructions, limitations, and remaining deliverables.
 
-**Rules:** A Manager may approve invoices up to 50,000 inclusive. A Director may approve invoices up to 500,000 inclusive as sole approver. An invoice above 500,000 needs two distinct approvers, and the second must be a Director (the implementation also permits Admin for the second approval). Distinctness compares stable user IDs carried through login and sessions; usernames and roles are not identity keys. A rejected attempt returns a clear standardized reason and message and changes nothing about the invoice.
+**Rules (D1-D3):** A Manager may approve invoices up to 50,000 inclusive. A Director may approve invoices up to 500,000 inclusive as sole approver. An invoice above 500,000 needs two distinct approvals: the first must be a Manager or Director, and the second must be a Director. Admin is not accepted at either high-value step. A Manager's first approval is recorded as `PartiallyApproved`, not as a final approval. Distinctness compares stable user IDs carried through login and sessions; usernames and roles are not identity keys. A rejected attempt returns a clear standardized reason and message and changes nothing about the invoice.
 
-**Assumptions:** The two limits are inclusive; for amounts over 500,000 the first approver may be Manager, Director, or Admin; the implementation marks the invoice `PartiallyApproved` after the first approval; amounts are numeric currency values and may be decimal because the application does not enforce integer-only values. No currency conversion is implemented. The checked-in OpenSpec delta spec describes the first high-value approval as transitioning from `PendingApproval` to `PartiallyApproved`.
+**Decisions:** D1 requires Director-only second approval. D2 permits Manager or Director as first approver above 500,000; a Manager's approval is partial and does not authorize full approval. Admin is excluded from both high-value steps. D3 preserves `SAME_APPROVER`, `SECOND_APPROVER_NOT_DIRECTOR`, and `LIMIT_EXCEEDED`; every rejection preserves a deep-equal invoice snapshot.
+
+**Other assumptions:** The approval limits are inclusive; amounts are numeric currency values and may be decimal because the application does not enforce integer-only values. No currency conversion is implemented.
 
 ## 2. Deliverables checklist
 
@@ -152,6 +154,10 @@ An earlier inspection recorded 413 lines: 367 tool starts, 1 tool completion/err
 | Historical implementation agent       | The interaction log identifies Gemini 3.8 Flash Medium in most tool events; Antigravity was the primary environment | Repository files and tools used by logged sessions; exact per-agent allowlist not recorded    | Per-agent denylist not recorded | Implementation commits and artifacts listed in 7; no per-agent output manifest |
 | Browser sub-agent                     | One `browser_subagent` invocation is present in the log; the task role is not described beyond the tool name        | Not recorded                                                                                  | Not recorded                    | Invocation is logged; result/artifact mapping is not recorded                  |
 | Other sub-agents                      | No additional named sub-agent roster found                                                                          | Not recorded                                                                                  | Not recorded                    | Not recorded                                                                   |
+
+### Reusable agent definitions added during remediation
+
+Five scoped profiles are available in `.agents/agents/`: `spec-writer.agent.md`, `test-author.agent.md`, `implementer.agent.md`, `reviewer.agent.md`, and `e2e-runner.agent.md`. Each states its purpose, allowed tools, inputs and outputs, file-scope restrictions, and log-format note. These reusable definitions document available roles; they are not retrospective evidence that each role was invoked in the original implementation.
 
 ## 6. Specification
 
