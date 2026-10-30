@@ -25,8 +25,8 @@
 
 - [x] 3.1 Update the OpenSpec proposal, design, delta spec, and task breakdown to require a Manager or Director as first approver and a distinct Director as second approver; explicitly reject Admin for both high-value steps.
 - [x] 3.2 Add failing unit tests for Admin as second approver and as first approver, Manager as second approver, and duplicate user IDs across same and different roles; assert reason codes and deep equality snapshots.
-- [ ] 3.3 Update only the domain approval evaluator to enforce the approved high-value roles; preserve Admin's unrelated sole-approval and invoice-administration permissions.
-- [ ] 3.4 Rerun mutation testing, account for the display-fallback mutant, and replace `docs/mutation/after.txt` with the full fresh run output.
+- [x] 3.3 Update only the domain approval evaluator to enforce the approved high-value roles; preserve Admin's unrelated sole-approval and invoice-administration permissions.
+- [x] 3.4 Rerun mutation testing, account for the display-fallback mutant, and replace `docs/mutation/after.txt` with the full fresh run output.
 - [ ] 3.5 Add standalone role-specific agent definitions and update `AGENTS.md`, `ASSIGNMENT.md`, and the PR description with current policy and audit evidence.
 - [ ] 3.6 Review the complete remediation diff with a reviewer separate from the implementer and update the PR findings/verdicts.
 - [ ] 3.7 Run final tests, lint, build, E2E, mutation, and strict OpenSpec validation; record current interaction-log evidence.
