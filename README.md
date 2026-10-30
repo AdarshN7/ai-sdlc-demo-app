@@ -95,13 +95,13 @@ stateDiagram-v2
         [*] --> EvaluateLimits
         EvaluateLimits --> Rejected: Reject with Reason
         EvaluateLimits --> Approved: Amount <= 50,000 (Manager or Approver)\nAmount > 50,000 and <= 500,000 (Director or Admin)
-        EvaluateLimits --> PartiallyApproved: Amount > 500,000 (1st Approval by Manager, Director, or Admin)
+        EvaluateLimits --> PartiallyApproved: Amount > 500,000 (1st Approval by Manager or Director)
     }
 
     state PartiallyApproved {
         [*] --> AwaitSecondApproval
         AwaitSecondApproval --> Rejected: Reject with Reason
-        AwaitSecondApproval --> Approved: 2nd Approval (Director or Admin, distinct user)
+        AwaitSecondApproval --> Approved: 2nd Approval (distinct Director)
     }
 
     Approved --> [*]
@@ -115,18 +115,18 @@ stateDiagram-v2
 1. **Manager Approval Limit ($\le 50,000$)**:
    - `MANAGER_APPROVAL_LIMIT = 50_000` (inclusive).
    - Managers may approve invoices with amount $\le 50,000$.
-   - Any attempt by a Manager to approve an amount $> 50,000$ is rejected with `LIMIT_EXCEEDED`.
+   - Any attempt by a Manager to sole-approve an amount $> 50,000$ and $\le 500,000$ is rejected with `LIMIT_EXCEEDED`. This does not block the Manager's first partial approval on invoices above 500,000 under the dual-approver rule.
 2. **Director Approval Limit ($\le 500,000$)**:
    - `DIRECTOR_APPROVAL_LIMIT = 500_000` (inclusive).
    - Directors and Admins may sole-approve invoices with amount $\le 500,000$, transitioning directly from `PendingApproval` to `Approved`.
 3. **High-Value Dual-Approver Rule ($> 500,000$)**:
    - Invoices strictly $> 500,000$ require **two distinct approvals**.
-   - **First Approval**: Can be submitted by a Manager, Director, or Admin. The invoice transitions to `PartiallyApproved` and waits for a second approver. The base `Approver` role cannot approve invoices over $50,000.
-   - **Second Approval**: Must be submitted by a different user with the **Director** or **Admin** role. The invoice transitions to `Approved`.
+   - **First Approval**: Must be submitted by a Manager or Director. A Manager's approval above $50,000 is recorded as `PartiallyApproved` and is not final approval. Admin cannot be a first approver; the base `Approver` role cannot approve invoices over $50,000.
+   - **Second Approval**: Must be submitted by a different user with the **Director** role. Admin is not accepted. The invoice transitions to `Approved`.
 4. **Duplicate Approver Negative Rule (`SAME_APPROVER`)**:
    - The same individual cannot provide both approvals. Distinctness is validated strictly by unique user IDs (`user.id === priorApproval.userId`), never by display name or role.
 5. **Non-Director Second Approver Negative Rule (`SECOND_APPROVER_NOT_DIRECTOR`) & Atomic Immutability**:
-   - A user who is neither a Director nor an Admin attempting the second approval on a high-value invoice is rejected with `SECOND_APPROVER_NOT_DIRECTOR`.
+   - A user who is not a Director, including an Admin, attempting the second approval on a high-value invoice is rejected with `SECOND_APPROVER_NOT_DIRECTOR`.
    - On rejection, zero entity changes are persisted.
 
 ### Standardized Rejection Reason Codes
@@ -135,7 +135,7 @@ stateDiagram-v2
 | :----------------------------- | :------------------------- | :-------------------------------------------------------------------------------- |
 | `LIMIT_EXCEEDED`               | `422 Unprocessable Entity` | Attempted approval amount exceeds the user's role maximum limit.                  |
 | `SAME_APPROVER`                | `422 Unprocessable Entity` | Same user attempted to approve an invoice twice.                                  |
-| `SECOND_APPROVER_NOT_DIRECTOR` | `422 Unprocessable Entity` | High-value second approval attempted by a user who is neither Director nor Admin. |
+| `SECOND_APPROVER_NOT_DIRECTOR` | `422 Unprocessable Entity` | High-value second approval attempted by a user who is not a Director. |
 | `ROLE_NOT_ALLOWED`             | `422 Unprocessable Entity` | User's role is not permitted by the approval rules.                               |
 | `INVOICE_NOT_PENDING`          | `409 Conflict`             | Invoice is not in `PendingApproval` or `PartiallyApproved` state.                 |
 
@@ -152,7 +152,7 @@ The application includes predefined accounts for local testing (in-memory demo c
 | `demo.director1` | `ChangeMe123!` | `Director` | First Director account for dual-approval testing.                                 |
 | `demo.director2` | `ChangeMe123!` | `Director` | Second Director account for distinct-approver testing.                            |
 | `demo.approver`  | `ChangeMe123!` | `Approver` | Approves invoices up to \$50,000.                                                 |
-| `demo.admin`     | `ChangeMe123!` | `Admin`    | May approve invoices and participate in either step of high-value approval.       |
+| `demo.admin` | `ChangeMe123!` | `Admin` | May sole-approve invoices up to $500,000 and perform administrative actions; cannot approve either step above $500,000. |
 
 ---
 

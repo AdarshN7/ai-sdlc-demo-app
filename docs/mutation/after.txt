@@ -2,112 +2,118 @@
 > ai-sdlc-demo-app@1.0.0 mutate
 > stryker run
 
-[33m19:43:06 (40099) WARN ProjectReader[39m Glob pattern "!src/**/*.test.ts" did not exclude any files.
-[32m19:43:06 (40099) INFO ProjectReader[39m Found 6 of 1212 file(s) to be mutated.
-[32m19:43:06 (40099) INFO Instrumenter[39m Instrumented 6 source file(s) with 232 mutant(s)
-[32m19:43:07 (40099) INFO ConcurrencyTokenProvider[39m Creating 9 test runner process(es).
-[32m19:43:07 (40099) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
-[32m19:43:08 (40099) INFO DryRunExecutor[39m Initial test run succeeded. Ran 80 tests in 0 seconds (net 18.13991699999997 ms, overhead 576.860083 ms).
+[33m16:27:19 (33471) WARN ProjectReader[39m Glob pattern "!src/**/*.test.ts" did not exclude any files.
+[32m16:27:19 (33471) INFO ProjectReader[39m Found 6 of 157 file(s) to be mutated.
+[32m16:27:19 (33471) INFO Instrumenter[39m Instrumented 6 source file(s) with 202 mutant(s)
+[32m16:27:19 (33471) INFO ConcurrencyTokenProvider[39m Creating 9 test runner process(es).
+[32m16:27:20 (33471) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
+[32m16:27:21 (33471) INFO DryRunExecutor[39m Initial test run succeeded. Ran 81 tests in 0 seconds (net 19.439993999999274 ms, overhead 520.5600060000007 ms).
 
 All tests
   integration/api-routes.test.ts
     ✘ API Route Handlers Integration Auth Routes login returns 200 with token and role for valid credentials [line 48] (covered 0)
-    ✘ API Route Handlers Integration Auth Routes login returns 401 for invalid credentials [line 60] (covered 0)
-    ✘ API Route Handlers Integration Auth Routes login returns 200 with Manager and Director roles [line 70] (covered 0)
-    ✘ API Route Handlers Integration Auth Routes logout returns 204 and clears session [line 88] (covered 0)
-    ~ API Route Handlers Integration Invoices Routes GET /api/invoices requires authentication [line 97] (covered 1)
-    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices returns all seed invoices for authenticated user [line 103] (covered 0)
-    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices filters by status [line 111] (covered 0)
-    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices returns 400 for unknown status [line 119] (covered 0)
-    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices validates required customer name [line 127] (covered 0)
-    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices validates amount > 0 [line 138] (covered 0)
-    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices creates a new draft invoice [line 149] (covered 0)
-    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices/[id] returns invoice if found or 404 [line 164] (covered 0)
-    ~ API Route Handlers Integration Invoices Routes DELETE /api/invoices/[id] returns 403 for non-Admin [line 174] (covered 1)
-    ✘ API Route Handlers Integration Invoices Routes DELETE /api/invoices/[id] returns 204 for Admin [line 180] (covered 0)
-    ✓ API Route Handlers Integration Approvals Routes POST /api/invoices/[id]/submit moves draft to PendingApproval [line 192] (killed 8)
-    ✓ API Route Handlers Integration Approvals Routes POST /api/invoices/[id]/submit returns 409 if invoice is not Draft [line 200] (killed 3)
-    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve approves pending invoice [line 208] (killed 23)
-    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 422 with LIMIT_EXCEEDED when Manager approves over 50k and leaves repo invoice unchanged [line 218] (killed 12)
-    ~ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Manager approves invoice <= 50k [line 236] (covered 55)
-    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Director approves invoice <= 500k [line 246] (killed 8)
-    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices [line 256] (killed 29)
-    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject requires non-empty reason [line 295] (killed 8)
-    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject rejects pending invoice with reason [line 306] (killed 4)
-    ✘ API Route Handlers Integration Test Reset Route POST /api/test/reset restores default seed invoices and counter [line 321] (covered 0)
-    ✘ API Route Handlers Integration Test Reset Route POST /api/test/reset returns 404 when NODE_ENV is production [line 339] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes login returns 401 for invalid credentials [line 61] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes login returns 200 with Manager and Director roles [line 71] (covered 0)
+    ✘ API Route Handlers Integration Auth Routes logout returns 204 and clears session [line 89] (covered 0)
+    ~ API Route Handlers Integration Invoices Routes GET /api/invoices requires authentication [line 98] (covered 1)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices returns all seed invoices for authenticated user [line 104] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices filters by status [line 112] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices returns 400 for unknown status [line 120] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices validates required customer name [line 128] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices validates amount > 0 [line 139] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes POST /api/invoices creates a new draft invoice [line 150] (covered 0)
+    ✘ API Route Handlers Integration Invoices Routes GET /api/invoices/[id] returns invoice if found or 404 [line 165] (covered 0)
+    ~ API Route Handlers Integration Invoices Routes DELETE /api/invoices/[id] returns 403 for non-Admin [line 175] (covered 1)
+    ✘ API Route Handlers Integration Invoices Routes DELETE /api/invoices/[id] returns 204 for Admin [line 181] (covered 0)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/invoices/[id]/submit moves draft to PendingApproval [line 193] (killed 8)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/invoices/[id]/submit returns 409 if invoice is not Draft [line 201] (killed 3)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve approves pending invoice [line 209] (killed 28)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 422 with LIMIT_EXCEEDED when Manager approves over 50k and leaves repo invoice unchanged [line 219] (killed 11)
+    ~ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Manager approves invoice <= 50k [line 237] (covered 49)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve returns 200 when Director approves invoice <= 500k [line 247] (killed 7)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/approve supports two-approver rule for > 500k invoices [line 257] (killed 32)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject requires non-empty reason [line 307] (killed 8)
+    ✓ API Route Handlers Integration Approvals Routes POST /api/approvals/[id]/reject rejects pending invoice with reason [line 318] (killed 6)
+    ✘ API Route Handlers Integration Test Reset Route POST /api/test/reset restores default seed invoices and counter [line 333] (covered 0)
+    ✘ API Route Handlers Integration Test Reset Route POST /api/test/reset returns 404 when NODE_ENV is production [line 351] (covered 0)
   unit
     approval-limits-step1.test.ts
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager approves 49,999 (below limit) [line 25] (killed 10)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 49,999 (below limit) [line 39] (covered 45)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager approves 50,000 (exact inclusive limit) [line 53] (killed 1)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 50,000 (exact Manager limit) [line 66] (covered 45)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 50,001 (exceeds limit by 1) [line 78] (killed 2)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 50,001 (within Director limit) [line 89] (covered 45)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 499,999 [line 101] (covered 41)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 499,999 [line 112] (covered 45)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 500,000 [line 124] (killed 1)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 500,000 (exact inclusive limit) [line 135] (covered 45)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director cannot sole-approve 500,001 to Approved status (held for dual approval) [line 148] (killed 4)
-      ✘ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Exports expected constants: MANAGER_APPROVAL_LIMIT is 50,000 and DIRECTOR_APPROVAL_LIMIT is 500,000 [line 161] (covered 0)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Rejects non-pending invoice with INVOICE_NOT_PENDING and descriptive message [line 166] (killed 6)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Rejects single approval when user has unauthorized role [line 177] (killed 7)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Allows Admin to approve invoice <= 500,000 [line 188] (killed 2)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Defaults unknown approver id/name and Approver role when approver identity is blank [line 199] (killed 3)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits Deep Equality & Immutability when Validation Fails Preserves deep equality of invoice on Manager limit rejection [line 214] (covered 41)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits Deep Equality & Immutability when Validation Fails Preserves deep equality of invoice on duplicate Director approval rejection [line 224] (killed 1)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration throws ApprovalRejectedError with reason LIMIT_EXCEEDED when Manager approves over 50,000 [line 242] (covered 62)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration successfully approves when Manager approves invoice <= 50,000 [line 264] (killed 1)
-      ~ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration successfully approves when Director approves invoice <= 500,000 [line 277] (covered 59)
-      ✓ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration throws ApprovalRejectedError with reason SAME_APPROVER when Director approves > 500,000 twice [line 290] (killed 1)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager approves 49,999 (below limit) [line 24] (killed 6)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 49,999 (below limit) [line 38] (covered 40)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager approves 50,000 (exact inclusive limit) [line 52] (killed 1)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 50,000 (exact Manager limit) [line 65] (covered 40)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 50,001 (exceeds limit by 1) [line 77] (killed 2)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 50,001 (within Director limit) [line 90] (covered 40)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 499,999 [line 102] (covered 36)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 499,999 [line 115] (covered 40)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Manager rejected for 500,000 [line 127] (killed 1)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director approves 500,000 (exact inclusive limit) [line 140] (covered 40)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Director cannot sole-approve 500,001 to Approved status (held for dual approval) [line 153] (killed 3)
+      ✘ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Exports expected constants: MANAGER_APPROVAL_LIMIT is 50,000 and DIRECTOR_APPROVAL_LIMIT is 500,000 [line 166] (covered 0)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Rejects non-pending invoice with INVOICE_NOT_PENDING and descriptive message [line 171] (killed 6)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Rejects single approval when user has unauthorized role [line 184] (killed 7)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Allows Admin to approve invoice <= 500,000 [line 197] (killed 2)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Boundary Value Thresholds (evaluateApproval pure function) Uses stable approver ID when username is omitted and defaults the role [line 208] (killed 1)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits Deep Equality & Immutability when Validation Fails Preserves deep equality of invoice on Manager limit rejection [line 223] (covered 36)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits Deep Equality & Immutability when Validation Fails Preserves deep equality of invoice on duplicate Director approval rejection [line 233] (killed 1)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration throws ApprovalRejectedError with reason LIMIT_EXCEEDED when Manager approves over 50,000 [line 251] (killed 1)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration successfully approves when Manager approves invoice <= 50,000 [line 266] (covered 49)
+      ~ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration successfully approves when Director approves invoice <= 500,000 [line 281] (covered 53)
+      ✓ Phase 4: Step 1 - Single-Approver Role Limits ApprovalService Integration throws ApprovalRejectedError with reason SAME_APPROVER when Director approves > 500,000 twice [line 296] (killed 1)
     approval-limits-step2.test.ts
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Manager leaves invoice partially approved awaiting second approver [line 22] (killed 6)
-      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Director leaves invoice partially approved awaiting second approver [line 40] (covered 45)
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by unauthorized role is rejected with ROLE_NOT_ALLOWED [line 58] (killed 7)
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Admin leaves invoice partially approved [line 72] (killed 2)
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Director marks it Approved [line 88] (killed 6)
-      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval completes approval when 1st approver was a Manager [line 119] (covered 50)
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Admin completes approval to Approved [line 145] (killed 3)
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) rejects with SAME_APPROVER when the same user attempts second approval [line 172] (killed 7)
-      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) validates distinctness using userId, not display name or role [line 200] (covered 44)
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) rejects with SAME_APPROVER when prior approvals list has multiple entries and first approver re-approves [line 226] (killed 1)
-      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) rejects with SAME_APPROVER when user is identified by username fallback [line 255] (covered 44)
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 2: Non-Director Second Approver (SECOND_APPROVER_NOT_DIRECTOR) rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager [line 281] (killed 3)
-      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) ApprovalService Integration for High-Value Invoices executes the full dual-approval workflow via ApprovalService [line 311] (killed 10)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Manager leaves invoice partially approved awaiting second approver [line 21] (killed 2)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by Director leaves invoice partially approved awaiting second approver [line 39] (covered 32)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) 1st approval by unauthorized role is rejected with ROLE_NOT_ALLOWED [line 57] (killed 6)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) First Approval on High-Value Invoices (> 500,000) rejects Admin as first approver with ROLE_NOT_ALLOWED and unchanged invoice [line 73] (covered 32)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval by distinct Director marks it Approved [line 91] (killed 4)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director 2nd approval completes approval when 1st approver was a Manager [line 122] (covered 42)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Second Approval by Distinct Director rejects Admin as second approver with SECOND_APPROVER_NOT_DIRECTOR and unchanged invoice [line 148] (killed 2)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) rejects the same Director twice with SAME_APPROVER and unchanged invoice [line 177] (killed 2)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) validates distinctness using userId, not display name or role [line 205] (covered 39)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) rejects the same user ID as Manager first approver and Director second approver [line 233] (covered 39)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) rejects with SAME_APPROVER when prior approvals list has multiple entries and first approver re-approves [line 261] (killed 1)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 1: Duplicate Approver (SAME_APPROVER) allows a distinct user ID even when the username matches the first approver [line 292] (covered 42)
+      ~ Phase 5: Step 2 – Two-Approver Rule (> 500,000) Negative Rule 2: Non-Director Second Approver (SECOND_APPROVER_NOT_DIRECTOR) rejects with SECOND_APPROVER_NOT_DIRECTOR when second approver is a Manager [line 322] (covered 42)
+      ✓ Phase 5: Step 2 – Two-Approver Rule (> 500,000) ApprovalService Integration for High-Value Invoices executes the full dual-approval workflow via ApprovalService [line 352] (killed 1)
     approval-service.test.ts
-      ~ ApprovalService Submit_MovesDraftToPendingApproval [line 19] (covered 10)
-      ✓ ApprovalService Submit_RejectsInvoiceThatIsNotADraft [line 26] (killed 1)
-      ✓ ApprovalService Approve_SetsStatusApproverAndTimestamp [line 32] (killed 1)
-      ✓ ApprovalService Approve_RejectsInvoiceThatIsStillADraft [line 41] (killed 4)
-      ✓ ApprovalService Approve_ThrowsWhenInvoiceDoesNotExist [line 47] (killed 3)
-      ~ ApprovalService Reject_ThrowsWhenInvoiceDoesNotExist [line 55] (covered 15)
-      ✓ ApprovalService Reject_RejectsInvoiceThatIsStillADraft [line 63] (killed 7)
-      ~ ApprovalService Reject_RejectsInvoiceThatIsAlreadyApproved [line 71] (covered 26)
-      ✓ ApprovalService Reject_AllowsRejectingPartiallyApprovedInvoice [line 79] (killed 4)
-      ✓ ApprovalService Reject_RecordsReasonAndApprover [line 88] (killed 1)
-      ~ ApprovalService Reject_RequiresAReason [line 98] (covered 11)
-      ~ ApprovalService Approve_SupportsApproverIdentityObjectWithExplicitId [line 104] (covered 62)
-      ~ ApprovalService Approve_SupportsApproverIdentityObjectWithExplicitUsernameOnly [line 112] (covered 62)
-      ✓ ApprovalService Approve_SupportsApproverWithBothIdAndUsernamePreservingIdAsUserId [line 120] (killed 2)
-      ✓ ApprovalService Approve_DefaultsRoleToApproverWhenNoneProvided [line 133] (killed 1)
-      ~ ApprovalService Approve_DefaultsUsernameToUnknownWhenNeitherUsernameNorIdProvided [line 141] (covered 64)
+      ~ ApprovalService Submit_MovesDraftToPendingApproval [line 22] (covered 10)
+      ✓ ApprovalService Submit_RejectsInvoiceThatIsNotADraft [line 29] (killed 1)
+      ✓ ApprovalService Approve_SetsStatusApproverAndTimestamp [line 39] (killed 1)
+      ✓ ApprovalService Approve_RejectsInvoiceThatIsStillADraft [line 51] (killed 4)
+      ✓ ApprovalService Approve_ThrowsWhenInvoiceDoesNotExist [line 63] (killed 3)
+      ~ ApprovalService Reject_ThrowsWhenInvoiceDoesNotExist [line 75] (covered 15)
+      ✓ ApprovalService Reject_RejectsInvoiceThatIsStillADraft [line 85] (killed 6)
+      ~ ApprovalService Reject_RejectsInvoiceThatIsAlreadyApproved [line 97] (covered 26)
+      ✓ ApprovalService Reject_AllowsRejectingPartiallyApprovedInvoice [line 109] (killed 2)
+      ✓ ApprovalService Reject_RecordsReasonAndApprover [line 118] (killed 2)
+      ~ ApprovalService Reject_RequiresAReason [line 128] (covered 11)
+      ~ ApprovalService Approve_SupportsApproverIdentityObjectWithExplicitId [line 138] (covered 49)
+      ~ ApprovalService Approve_UsesStableIdWhenUsernameIsAlsoPresent [line 146] (covered 49)
+      ~ ApprovalService Approve_SupportsApproverWithBothIdAndUsernamePreservingIdAsUserId [line 158] (covered 53)
+      ~ ApprovalService Approve_DefaultsRoleToApproverWhenNoneProvided [line 171] (covered 53)
+      ~ ApprovalService Approve_UsesStableIdAsDisplayNameWhenUsernameIsMissing [line 179] (covered 49)
     discount-calculator.test.ts
       ✓ DiscountCalculator calculates quantity discount tiers [line 7] (killed 13)
       ✓ DiscountCalculator calculates loyalty discount capped at 10% [line 17] (killed 3)
       ✓ DiscountCalculator calculates combined discount with optional nonprofit bonus [line 23] (killed 8)
       ✓ DiscountCalculator applies discount correctly with rounding [line 28] (killed 5)
 
-Ran 1.77 tests per mutant on average.
+[NoCoverage] StringLiteral
+src/domain/approval-limits.ts:44:60
+-     const approverName = approver.username || approver.id || 'unknown';
++     const approverName = approver.username || approver.id || "";
+
+Ran 2.16 tests per mutant on average.
 ------------------------|------------------|----------|-----------|------------|----------|----------|
                         | % Mutation score |          |           |            |          |          |
 File                    |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
 ------------------------|--------|---------|----------|-----------|------------|----------|----------|
-All files               | 100.00 |  100.00 |      232 |         0 |          0 |        0 |        0 |
- approval-limits.ts     | 100.00 |  100.00 |      135 |         0 |          0 |        0 |        0 |
- approval-service.ts    | 100.00 |  100.00 |       67 |         0 |          0 |        0 |        0 |
+All files               |  99.50 |  100.00 |      201 |         0 |          0 |        1 |        0 |
+ approval-limits.ts     |  99.14 |  100.00 |      115 |         0 |          0 |        1 |        0 |
+ approval-service.ts    | 100.00 |  100.00 |       56 |         0 |          0 |        0 |        0 |
  discount-calculator.ts | 100.00 |  100.00 |       29 |         0 |          0 |        0 |        0 |
  errors.ts              | 100.00 |  100.00 |        1 |         0 |          0 |        0 |        0 |
 ------------------------|--------|---------|----------|-----------|------------|----------|----------|
-[32m19:43:14 (40099) INFO JsonReporter[39m Your report can be found at: file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/reports/mutation/mutation.json
-[32m19:43:14 (40099) INFO HtmlReporter[39m Your report can be found at: file:///Users/adarsh.nishad/Workspace/NAGP/ai-sdlc-demo-app/reports/mutation/mutation.html
-[32m19:43:14 (40099) INFO MutationTestExecutor[39m Done in 7 seconds.
+[32m16:27:25 (33471) INFO JsonReporter[39m Your report can be found at: file:///Users/adarsh.nishad/Workspace/NAGP/ai%20in%20sdlc%20docs/adarsh-nishad_3192774_AI-in-SDLC/ai-sdlc-demo-app/reports/mutation/mutation.json
+[32m16:27:25 (33471) INFO HtmlReporter[39m Your report can be found at: file:///Users/adarsh.nishad/Workspace/NAGP/ai%20in%20sdlc%20docs/adarsh-nishad_3192774_AI-in-SDLC/ai-sdlc-demo-app/reports/mutation/mutation.html
+[32m16:27:25 (33471) INFO MutationTestExecutor[39m Done in 6 seconds.

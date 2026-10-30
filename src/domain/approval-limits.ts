@@ -3,6 +3,9 @@ import { Invoice, InvoiceApproval, Role } from './invoice';
 export const MANAGER_APPROVAL_LIMIT = 50_000;
 export const DIRECTOR_APPROVAL_LIMIT = 500_000;
 
+const HIGH_VALUE_FIRST_APPROVER_ROLES: readonly string[] = ['Manager', 'Director'];
+const HIGH_VALUE_SECOND_APPROVER_ROLE = 'Director';
+
 export type ApprovalRejectionReason =
   | 'LIMIT_EXCEEDED'
   | 'SAME_APPROVER'
@@ -53,8 +56,8 @@ export function evaluateApproval(
   // High-value dual-approval rule (> 500,000)
   if (invoice.amount > DIRECTOR_APPROVAL_LIMIT) {
     if (priorApprovals.length === 0) {
-      // First approval: Manager, Director, or Admin permitted
-      if (role !== 'Manager' && role !== 'Director' && role !== 'Admin') {
+      // A Manager's high-value approval is partial, not sole approval.
+      if (!HIGH_VALUE_FIRST_APPROVER_ROLES.includes(role)) {
         return {
           ok: false,
           reason: 'ROLE_NOT_ALLOWED',
@@ -85,8 +88,8 @@ export function evaluateApproval(
         };
       }
 
-      // Negative rule 2: Second approver must be Director (or Admin)
-      if (role !== 'Director' && role !== 'Admin') {
+      // Negative rule 2: Second approver must be a Director.
+      if (role !== HIGH_VALUE_SECOND_APPROVER_ROLE) {
         return {
           ok: false,
           reason: 'SECOND_APPROVER_NOT_DIRECTOR',
@@ -142,4 +145,3 @@ export function evaluateApproval(
     invoice: updatedInvoice,
   };
 }
-

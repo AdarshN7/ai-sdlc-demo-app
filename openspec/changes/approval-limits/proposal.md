@@ -11,7 +11,8 @@ Invoices currently lack role-based tiered authorization controls, allowing any a
   - **Director**: may approve invoices up to 500,000 inclusive.
 - Introduce dual-approval enforcement for high-value invoices:
   - Invoices greater than 500,000 require two distinct approvers.
-  - The second approver must hold the Director or Admin role.
+  - The second approver must hold the Director role; Admin is not accepted.
+  - For invoices above 500,000, the first approver must be a Manager or Director. A Manager's approval is recorded as partial and does not approve the invoice alone.
   - The same user is strictly prohibited from approving the same invoice twice.
 - Implement atomic rejection and audit reasons:
   - Any failed approval attempt leaves invoice state strictly unmodified.

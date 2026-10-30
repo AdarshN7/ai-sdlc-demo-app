@@ -23,7 +23,7 @@ All approval decisions are validated by pure domain logic before any repository 
 1. **Manager Approval Limit**:
    - `MANAGER_APPROVAL_LIMIT = 50_000` (inclusive).
    - A Manager may approve invoices with amount $\le$ 50,000.
-   - Any attempt by a Manager to approve an amount $> 50,000$ (e.g. 50,001) MUST be rejected with standardized reason code `LIMIT_EXCEEDED`.
+   - Any attempt by a Manager to sole-approve an amount $> 50,000$ and $\le$ 500,000 (e.g. 50,001) MUST be rejected with standardized reason code `LIMIT_EXCEEDED`. This does not block the Manager's first partial approval on invoices above 500,000 under rule 3.
 
 2. **Director Approval Limit**:
    - `DIRECTOR_APPROVAL_LIMIT = 500_000` (inclusive).
@@ -32,8 +32,8 @@ All approval decisions are validated by pure domain logic before any repository 
 
 3. **High-Value Dual-Approver Rule (> 500,000)**:
    - Any invoice with amount strictly $> 500,000$ (e.g. 500,001) requires **two distinct approvals**.
-   - **First Approval**: Can be submitted by either a Manager or a Director (or Admin). The invoice transitions to `PartiallyApproved` and remains held awaiting a second approver.
-   - **Second Approval**: MUST be approved by a user with the `Director` role (or Admin). Upon second approval, the invoice transitions to `Approved`.
+   - **First Approval**: MUST be submitted by a Manager or Director. A Manager's approval above the Manager limit is recorded as `PartiallyApproved`, not as a final approval. Admin is not permitted as a first approver.
+   - **Second Approval**: MUST be approved by a distinct user with the `Director` role. Admin is not permitted as a second approver. Upon second approval, the invoice transitions to `Approved`.
 
 4. **Negative Rule 1: Duplicate Approver (`SAME_APPROVER`)**:
    - The same user may NEVER count as both approvers on one invoice.
@@ -41,7 +41,7 @@ All approval decisions are validated by pure domain logic before any repository 
    - If the first approver attempts the second approval, the attempt MUST be rejected with reason code `SAME_APPROVER`.
 
 5. **Negative Rule 2 & Immutability (`SECOND_APPROVER_NOT_DIRECTOR`, Atomic Rejection)**:
-   - If a non-Director (e.g. Manager) attempts the second approval on a high-value invoice, the attempt MUST be rejected with reason code `SECOND_APPROVER_NOT_DIRECTOR`.
+   - If a user who is not a Director (including Admin or Manager) attempts the second approval on a high-value invoice, the attempt MUST be rejected with reason code `SECOND_APPROVER_NOT_DIRECTOR`.
    - **Atomic Immutability**: Any rejected approval attempt MUST return a clear standardized reason code and readable error message, and **nothing about the invoice state or repository changes**. The invoice remains deeply equal to its pre-attempt state.
 
 ### Standardized Rejection Reason Codes
@@ -81,6 +81,18 @@ All approval decisions are validated by pure domain logic before any repository 
 - **Negative Rules**: Named unit tests for `SAME_APPROVER` (comparing user IDs) and `SECOND_APPROVER_NOT_DIRECTOR`.
 - **Deep Equality Assertion**: Every rejection test must assert that the invoice snapshot before the call is deeply equal to the invoice state after the call.
 - **Route Handler Integration**: Route handlers tested for returning 422 with structured rejection reason codes on limit failures.
+
+## Reusable Agent Definitions
+
+Role-scoped agent definitions are maintained under `.agents/agents/`:
+
+- `spec-writer.agent.md`: OpenSpec artifacts and validation.
+- `test-author.agent.md`: Approval tests, rejection codes, and deep-equality assertions.
+- `implementer.agent.md`: Pure domain changes within the assigned scope.
+- `reviewer.agent.md`: Read-only review against the workshop criteria and diff.
+- `e2e-runner.agent.md`: Playwright execution and result reporting.
+
+Each definition lists its purpose, allowed tool aliases, input/output contract, scope restrictions, and interaction-log format. Follow the definition's file ownership; tool outputs are captured by lifecycle hooks and uncaptured decisions/summaries are recorded with `.agents/scripts/log-manual-entry.sh`.
 
 ## Review Expectations & Rubric
 

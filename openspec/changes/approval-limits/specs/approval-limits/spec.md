@@ -7,14 +7,14 @@ Enforces role-based approval limits, dual-approver sign-off for high-value trans
 ## ADDED Requirements
 
 ### Requirement: Role-Based Single Approver Limits
-The system SHALL enforce maximum approval limits based on the approver's role for single-approver invoice approval. Managers SHALL only be permitted to approve invoices with amounts up to 50,000 inclusive. Directors SHALL only be permitted to approve invoices with amounts up to 500,000 inclusive as a sole approver. Exceeding attempts SHALL be rejected with reason code `LIMIT_EXCEEDED` and leave the invoice unchanged.
+The system SHALL enforce inclusive Manager and Director limits for sole approval. A Manager's first approval above 500,000 is a partial approval under the dual-approval requirement, not a sole approval. Rejected sole-approval attempts SHALL return `LIMIT_EXCEEDED` and leave the invoice unchanged.
 
 #### Scenario: Manager approves invoice at or below limit
 - **WHEN** an invoice has an amount of 49,999 or 50,000 and a user with the Manager role submits an approval
 - **THEN** the approval is accepted and the invoice status transitions to `Approved` with the decision recorded
 
-#### Scenario: Manager attempts to approve invoice exceeding limit
-- **WHEN** an invoice has an amount of 50,001 or greater and a user with the Manager role submits an approval
+#### Scenario: Manager attempts to sole-approve an invoice exceeding the single-approval limit
+- **WHEN** an invoice has an amount between 50,001 and 500,000 inclusive and a user with the Manager role attempts to sole-approve it
 - **THEN** the approval is rejected with reason code `LIMIT_EXCEEDED`, an informative error message is returned, and all fields of the invoice remain completely unchanged
 
 #### Scenario: Director approves invoice at or below single-approver limit
@@ -22,19 +22,27 @@ The system SHALL enforce maximum approval limits based on the approver's role fo
 - **THEN** the approval is accepted and the invoice status transitions to `Approved` with the decision recorded
 
 #### Scenario: Director attempts to sole-approve invoice exceeding single-approver limit
-- **WHEN** an invoice has an amount of 500,001 or greater and a user with the Director role attempts a sole final approval without a prior distinct approval
-- **THEN** the approval as a sole approver is rejected or held pending dual approval, and cannot transition to `Approved` with only one approver
+- **WHEN** an invoice has an amount of 500,001 or greater in `PendingApproval` status with no prior approvals, and a Director submits an approval
+- **THEN** the approval is recorded as the first partial approval, the invoice transitions to `PartiallyApproved`, and it cannot transition to `Approved` with only one approver
 
 ### Requirement: Dual Approval for High-Value Invoices
-Invoices with an amount strictly greater than 500,000 SHALL require two distinct approvals before reaching `Approved` status. The first approval MAY be performed by a Manager, Director, or Admin. After the first approval the invoice SHALL be `PartiallyApproved`. The second approval MUST be performed by a Director or Admin.
+Invoices with an amount strictly greater than 500,000 SHALL require two distinct approvals before reaching `Approved` status. The first approval MUST be performed by a Manager or Director. A Manager's first approval SHALL be recorded as partial approval and SHALL NOT approve the invoice on its own. Admin SHALL NOT perform either approval. After an eligible first approval the invoice SHALL be `PartiallyApproved`. The second approval MUST be performed by a distinct Director.
 
-#### Scenario: First approval on high-value invoice by Manager, Director, or Admin
-- **WHEN** an invoice has an amount of 500,001 or greater in `PendingApproval` status with no prior approvals, and a Manager, Director, or Admin submits an approval
+#### Scenario: First approval on high-value invoice by Manager or Director
+- **WHEN** an invoice has an amount of 500,001 or greater in `PendingApproval` status with no prior approvals, and a Manager or Director submits an approval
 - **THEN** the approval is recorded on the invoice, the invoice transitions to `PartiallyApproved`, and it awaits a second approval
 
-#### Scenario: Second approval on high-value invoice by Director
-- **WHEN** an invoice has an amount of 500,001 or greater with one existing approval from a different user, and a user with the Director or Admin role submits an approval
+#### Scenario: Second approval on high-value invoice by a distinct Director
+- **WHEN** an invoice has an amount of 500,001 or greater with one existing approval from a different user, and a user with the Director role submits an approval
 - **THEN** the second approval is recorded and the invoice status transitions to `Approved`
+
+#### Scenario: Admin as first approver is rejected
+- **WHEN** an Admin attempts the first approval on an invoice with an amount of 500,001 or greater
+- **THEN** the approval is rejected with reason code `ROLE_NOT_ALLOWED`, a readable message is returned, and the invoice remains deeply equal to its pre-attempt snapshot
+
+#### Scenario: Admin as second approver is rejected
+- **WHEN** an Admin with a different user ID attempts the second approval on an invoice with an amount of 500,001 or greater
+- **THEN** the approval is rejected with reason code `SECOND_APPROVER_NOT_DIRECTOR`, a readable message is returned, and the invoice remains deeply equal to its pre-attempt snapshot
 
 ### Requirement: Prevention of Duplicate Approver on Same Invoice
 The system SHALL strictly prohibit the same user from acting as both the first and second approver on the same invoice, identified by unique user ID.
@@ -44,11 +52,15 @@ The system SHALL strictly prohibit the same user from acting as both the first a
 - **THEN** the second approval is rejected with reason code `SAME_APPROVER`, an informative error message is returned, and the invoice state remains completely unchanged
 
 ### Requirement: Enforcement of Director Role for Second Approver
-The system SHALL require that the second approver on an invoice exceeding 500,000 has the Director or Admin role.
+The system SHALL require that the second approver on an invoice exceeding 500,000 has the Director role. An Admin SHALL NOT be accepted as the second approver.
 
 #### Scenario: Non-director user attempts second approval on high-value invoice
 - **WHEN** an invoice with an amount of 500,001 or greater already has an initial approval recorded by a distinct user, and a user with the Manager role attempts the second approval
 - **THEN** the approval is rejected with reason code `SECOND_APPROVER_NOT_DIRECTOR`, an informative error message is returned, and the invoice state remains completely unchanged
+
+#### Scenario: Same user ID is rejected even when the second role differs
+- **WHEN** the user ID that made the first high-value approval attempts the second approval with a different role
+- **THEN** the approval is rejected with reason code `SAME_APPROVER` and the invoice remains deeply equal to its pre-attempt snapshot
 
 ### Requirement: Invoice Immutability on Rejection
 The system SHALL guarantee that any rejected approval attempt leaves the target invoice completely unmodified.
@@ -65,11 +77,11 @@ The system SHALL only allow approval operations on invoices that are in a pendin
 - **THEN** the approval is rejected with reason code `INVOICE_NOT_PENDING` and the invoice remains unchanged
 
 ### Requirement: Boundary Value Thresholds
-The system SHALL enforce exact boundary behavior according to the defined thresholds: 49,999 (Manager/Director pass), 50,000 (Manager/Director pass), 50,001 (Manager rejected with `LIMIT_EXCEEDED`, Director pass), 499,999 (Manager rejected, Director pass), 500,000 (Manager rejected, Director pass), and 500,001 (requires two distinct approvers, second being a Director or Admin).
+The system SHALL enforce role limits inclusively and require dual approval only for invoices above 500,000.
 
 #### Scenario: Boundary test matrix execution
 - **WHEN** invoices at boundary amounts 49,999, 50,000, 50,001, 499,999, 500,000, and 500,001 are evaluated against approver roles
-- **THEN** the outcome precisely matches the boundary threshold authorization rules
+- **THEN** Manager and Director sole approvals succeed through their inclusive limits; Managers receive `LIMIT_EXCEEDED` above 50,000 through 500,000; Directors sole-approve through 500,000; and 500,001 requires a Manager or Director partial first approval followed by a distinct Director
 
 ### Requirement: Standardized Rejection Reason Codes
 The system SHALL emit standardized rejection reason codes across all validation failures: `LIMIT_EXCEEDED` for role ceiling violations, `SAME_APPROVER` for duplicate user approvals, `SECOND_APPROVER_NOT_DIRECTOR` for role violations on high-value dual approvals, `ROLE_NOT_ALLOWED` for unauthorized roles, and `INVOICE_NOT_PENDING` for invalid lifecycle states.
