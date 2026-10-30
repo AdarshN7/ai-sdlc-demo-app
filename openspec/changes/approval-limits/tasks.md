@@ -29,4 +29,4 @@
 - [x] 3.4 Rerun mutation testing, account for the display-fallback mutant, and replace `docs/mutation/after.txt` with the full fresh run output.
 - [x] 3.5 Add standalone role-specific agent definitions and update `AGENTS.md`, `ASSIGNMENT.md`, and the PR description with current policy and audit evidence.
 - [x] 3.6 Review the complete remediation diff with a reviewer separate from the implementer and update the PR findings/verdicts.
-- [ ] 3.7 Run final tests, lint, build, E2E, mutation, and strict OpenSpec validation; record current interaction-log evidence.
+- [x] 3.7 Run final tests, lint, build, E2E, mutation, and strict OpenSpec validation; record current interaction-log evidence.
