@@ -1,8 +1,17 @@
 # Invoice Approval Demo App
 
-### Author: Adarsh Nishad
+#### Author: Adarsh Nishad
+
+**Repository:** [AdarshN7/ai-sdlc-demo-app](https://github.com/AdarshN7/ai-sdlc-demo-app)
+**Feature:** Role based approval limits and two approvers for high value invoices
+**Stack:** Next.js 14 App Router, TypeScript, Vitest, Playwright, StrykerJS, OpenSpec
 
 A full-stack invoice approval application built with **Next.js 14 App Router** and **TypeScript**, migrated from .NET 8 to demonstrate modern AI-in-SDLC practices. The application features **role-based approval limits** and a **dual-approver workflow for high-value invoices**, with business rules isolated in a pure domain layer. It includes unit, integration, and end-to-end tests, plus Stryker mutation testing.
+
+## Demo Videos
+
+- [SharePoint demo](https://nagarro-my.sharepoint.com/:v:/p/adarsh_nishad/IQB6jBdTbAQTR4h4ktDyaUFQAZwdRZHWrCDhOUTE--jP3Ek?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D&e=KUSdKP)
+- [YouTube demo](https://youtu.be/zLCP96YUih0?si=QcW8l4_XqvpLx4ae)
 
 ---
 
@@ -136,14 +145,14 @@ stateDiagram-v2
 
 The application includes predefined accounts for local testing (in-memory demo credentials):
 
-| Username         | Password       | Role       | Description / Permissions                                                       |
-| :--------------- | :------------- | :--------- | :------------------------------------------------------------------------------ |
-| `demo.manager`   | `ChangeMe123!` | `Manager`  | Approves invoices up to $50,000; may provide the first approval above $500,000. |
-| `demo.director`  | `ChangeMe123!` | `Director` | Sole-approves up to $500,000; may provide either approval above $500,000.       |
-| `demo.director1` | `ChangeMe123!` | `Director` | First Director account for dual-approval testing.                               |
-| `demo.director2` | `ChangeMe123!` | `Director` | Second Director account for distinct-approver testing.                          |
-| `demo.approver`  | `ChangeMe123!` | `Approver` | Approves invoices up to $50,000.                                                |
-| `demo.admin`     | `ChangeMe123!` | `Admin`    | May approve invoices and participate in either step of high-value approval.     |
+| Username         | Password       | Role       | Description / Permissions                                                         |
+| :--------------- | :------------- | :--------- | :-------------------------------------------------------------------------------- |
+| `demo.manager`   | `ChangeMe123!` | `Manager`  | Approves invoices up to \$50,000; may provide the first approval above \$500,000. |
+| `demo.director`  | `ChangeMe123!` | `Director` | Sole-approves up to \$500,000; may provide either approval above \$500,000.       |
+| `demo.director1` | `ChangeMe123!` | `Director` | First Director account for dual-approval testing.                                 |
+| `demo.director2` | `ChangeMe123!` | `Director` | Second Director account for distinct-approver testing.                            |
+| `demo.approver`  | `ChangeMe123!` | `Approver` | Approves invoices up to \$50,000.                                                 |
+| `demo.admin`     | `ChangeMe123!` | `Admin`    | May approve invoices and participate in either step of high-value approval.       |
 
 ---
 
@@ -191,7 +200,7 @@ ai-sdlc-demo-app/
 ├── docs/                         # Assignment documentation, cold-vs-context, use cases
 │   ├── use-cases/                # Use case briefs (bulk approval, partial approval)
 │   └── cold-vs-context.md        # AGENTS.md efficacy analysis
-├── openspec/                     # Formal OpenSpec change specifications & proposals
+├── openspec/                     # OpenSpec config and checked-in specifications
 ├── .agents/                      # AI agent workflows, skills, and execution hooks
 ├── .ai-sdlc/                     # Immutable AI interaction logs (interaction-log.jsonl)
 ├── AGENTS.md                     # Operational constitution & conventions for AI agents
@@ -249,7 +258,7 @@ npm run test:watch
 Executes complete browser interactions verifying role switches, limits validation, and dual-approver workflows:
 
 ```bash
-npm run test:e2e
+npm --prefix e2e run test:headed
 ```
 
 ### 3. Mutation Testing (StrykerJS)
@@ -273,5 +282,5 @@ npm run lint
 - [ASSIGNMENT.md](ASSIGNMENT.md) – Full project delivery write-up, architectural trade-offs, and methodology.
 - [AGENTS.md](AGENTS.md) – Project conventions, business rules, testing expectations, and review rubric.
 - [docs/cold-vs-context.md](docs/cold-vs-context.md) – Comparative study of AI performance with and without contextual guidance.
-- [openspec/](openspec/) – OpenSpec proposals, specifications, and task breakdowns.
+- [openspec/](openspec/) – OpenSpec configuration and the approval change's proposal, design, delta specification, and task breakdown.
 - [docs/use-cases/](docs/use-cases/) – Functional feature briefs.
