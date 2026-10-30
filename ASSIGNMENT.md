@@ -971,6 +971,18 @@ Log: `.ai-sdlc/interaction-log.jsonl`. Format: one JSON object per line. Hooks i
 - [SharePoint demo](https://nagarro-my.sharepoint.com/:v:/p/adarsh_nishad/IQB6jBdTbAQTR4h4ktDyaUFQAZwdRZHWrCDhOUTE--jP3Ek?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D&e=KUSdKP)
 - [YouTube demo](https://youtu.be/zLCP96YUih0?si=QcW8l4_XqvpLx4ae)
 
+### Timestamped outline
+
+| Timestamp | Chapter | What is shown |
+|-----------|---------|---------------|
+| 0:00–1:30 | **Welcome and the application** | Opening title, `npm run dev`, architecture overview (`src/domain`, `src/infrastructure`, `src/app/api`), technology stack, approval rules from `AGENTS.md`, Antigravity agent context, interaction log walkthrough |
+| 1:30–2:30 | **From requirements to implementation** | OpenSpec approval-limits spec scenarios (Given/When/Then), boundary value matrix (49,999–500,001), incremental task breakdown (Step 1 single-approver, Step 2 dual-approver) |
+| 2:30–5:00 | **Rules that hold under pressure** | **Live `npm test` run** (unit + integration suite), `npm run lint`, SAME_APPROVER test (userId comparison), SECOND_APPROVER_NOT_DIRECTOR test with immutability assertion, intentional boundary regression demo (changing `>` to `>=`), test failure caught, restore and re-run to pass |
+| 5:00–7:00 | **Mutation testing** | Baseline report (`docs/mutation/before.txt` — 82.04%), survivor inspection (duplicate-approver, director check, approval state), hardened report (`docs/mutation/after.txt` — 100.00%), **live `npm run mutate` run** with actual score |
+| 7:00–8:30 | **End-to-end experience** | E2E test code review (`e2e/tests/app.spec.ts`), `npm run build`, **live `npm --prefix e2e run test:headed` run** — Manager attempts \$75,000 approval, `LIMIT_EXCEEDED` rejection displayed, status remains pending, page reload confirms unchanged state |
+| 8:30–9:45 | **Live application demo** | Dashboard walkthrough, create and submit invoice, Manager approves \$40,000 (success), Manager attempts \$75,000 (rejected), Manager first-approves \$600,000 (PartiallyApproved), Director completes second approval (Approved) |
+| 9:45–11:00 | **Review and close** | PR review findings triage table (Fixed/Dismissed/Deferred verdicts), GitHub Actions CI checks passing, closing card |
+
 ## 14. Limitations, risks and next steps
 
 - Repository is in memory; server restart resets data.
