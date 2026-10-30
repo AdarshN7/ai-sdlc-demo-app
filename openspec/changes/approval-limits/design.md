@@ -53,7 +53,7 @@ The project adheres to domain-driven hexagonal layering (as defined in `AGENTS.m
   ```
   For an invoice exceeding 500,000:
   - First valid approval appends to `approvals` array and transitions `status = 'PartiallyApproved'`.
-  - Second valid approval by a Director or Admin appends to `approvals` and transitions `status = 'Approved'`.
+  - Second valid approval by a distinct Director appends to `approvals` and transitions `status = 'Approved'`. Admin is not accepted as a second approver.
 - **Rationale**: Retains full audit trail of both sign-offs without requiring extra intermediate lifecycle states that break existing invoice queries.
 
 ## Boundary Values Table
@@ -74,11 +74,11 @@ The following boundary conditions establish exact system behavior across thresho
 | **500,000** | Director | 1st approver | **Approved** (inclusive limit) | None | `Approved` |
 | **500,001** | Manager | 1st approver | **Recorded (Pending)** | None | `PartiallyApproved` (1/2 approvals) |
 | **500,001** | Director | 1st approver | **Recorded (Pending)** | None | `PartiallyApproved` (1/2 approvals) |
-| **500,001** | Admin | 1st approver | **Recorded (Pending)** | None | `PartiallyApproved` (1/2 approvals) |
 | **500,001** | Same User | 2nd approver | **Rejected** | `SAME_APPROVER` | `PartiallyApproved` (unchanged) |
 | **500,001** | Manager | 2nd approver (diff user) | **Rejected** | `SECOND_APPROVER_NOT_DIRECTOR` | `PartiallyApproved` (unchanged) |
 | **500,001** | Director | 2nd approver (diff user) | **Approved** | None | `Approved` (2/2 approvals) |
-| **500,001** | Admin | 2nd approver (diff user) | **Approved** | None | `Approved` (2/2 approvals) |
+| **500,001** | Admin | 1st approver | **Rejected** | `ROLE_NOT_ALLOWED` | `PendingApproval` (unchanged) |
+| **500,001** | Admin | 2nd approver (diff user) | **Rejected** | `SECOND_APPROVER_NOT_DIRECTOR` | `PartiallyApproved` (unchanged) |
 
 ## Standard Rejection Reason Codes
 
@@ -86,14 +86,14 @@ The system defines the following canonical reason codes returned upon rejected a
 
 - `LIMIT_EXCEEDED`: The invoice amount exceeds the maximum allowed approval limit for the approver's role.
 - `SAME_APPROVER`: The same user ID has already approved this invoice and cannot provide a second approval.
-- `SECOND_APPROVER_NOT_DIRECTOR`: The second approval on an invoice exceeding 500,000 was attempted by a user who is neither a Director nor Admin.
+- `SECOND_APPROVER_NOT_DIRECTOR`: The second approval on an invoice exceeding 500,000 was attempted by a user who is not a Director.
 - `ROLE_NOT_ALLOWED`: The user's role does not possess permissions to approve invoices.
 - `INVOICE_NOT_PENDING`: The invoice is not in a pending approval state (e.g., already `Draft`, `Approved`, or `Rejected`).
 
 ## Resolution of Open Questions
 
 1. **Inclusive Limits**: "Up to 50,000" and "up to 500,000" are strictly inclusive. Amounts of 50,000.00 and 500,000.00 are valid for Manager and single Director respectively.
-2. **First Approver for High-Value Invoices**: For invoices > 500,000, the first approver may be a Manager, Director, or Admin. The invoice moves to `PartiallyApproved` until a second, distinct Director or Admin signs off.
+2. **First Approver for High-Value Invoices**: For invoices > 500,000, the first approver must be a Manager or Director. A Manager's first approval is recorded as `PartiallyApproved` and is not final approval. Admin is not permitted to provide the first approval. A second, distinct Director must approve to complete the workflow.
 3. **Invoice Status After First Approval**: The status becomes `PartiallyApproved`, with the first approval persisted in the `approvals` array.
 4. **Amount Representation**: Amounts are positive numeric values representing single-currency values.
 
